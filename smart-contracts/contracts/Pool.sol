@@ -40,12 +40,6 @@ contract Pool {
 
     uint public liquidationPenaltyRate;
 
-    // TODO PERHAPS NO NEED FOR THIS GIVEN THE EXISTENCE OF THE IB TOKEN
-    mapping (address => uint) depositAmounts;
-
-    // TODO PERHAPS NO NEED FOR THIS GIVEN THE EXISTENCE OF THE DEBT TOKEN
-    mapping (address => uint) borrowAmounts;
-
     mapping(address => uint256) public collateralBalances;
 
     event DepositAdded(address indexed depositor, address token, uint amount, uint totalLiquidity, uint totalBorrows, uint utilizationRate);
@@ -85,7 +79,7 @@ contract Pool {
         totalLiquidity += _amount;        
         
         // TEST ME
-        depositAmounts[msg.sender] += _amount; 
+        //depositAmounts[msg.sender] += _amount; 
             
         uint exchangeRate = ibToken.getExchangeRate();
 
@@ -103,7 +97,7 @@ contract Pool {
         emit DepositAdded(msg.sender, address(tradableToken), _amount, totalLiquidity, totalBorrows, _utilizationRate);
     }
 
-    function fullWithdraw(uint _amount) public  {
+    function withdraw() public  {
         // IBToken exchange rate may need adjustment to ensure accurate withdrawal calculations. debt token 
         // index rate should not be updated
         // Large withdrawals reduce liquidity, increasing utilization and potentially affecting rates.
@@ -121,7 +115,7 @@ contract Pool {
         totalLiquidity -= depositWithInterests;
 
         // TESTME is it still useful ???
-        depositAmounts[msg.sender] = 0;  
+        //depositAmounts[msg.sender] = 0;  
 
         uint _utilizationRate = getUtilizationRate();
         uint _borrowingRate = borrowingRate.recalculateBorrowingRate(_utilizationRate);
@@ -154,8 +148,6 @@ contract Pool {
 
         uint healthFactor = getHealthFactor(msg.sender, _amount, msg.value, collateralPrice);
         require(healthFactor >= 1e18, "The borrower health factor must be greater than 1 to allow the borrowing");
-
-        borrowAmounts[msg.sender] += _amount;
         
         collateralBalances[msg.sender] += msg.value;
         totalBorrows += _amount;
@@ -183,24 +175,21 @@ contract Pool {
         // Same as befeore, the debt index must reflect all accrued interest before adjusting balances.
         uint borrowerDebt = debtToken.balanceOf(msg.sender);
         require(borrowerDebt > 0, "The borrower has no debt to repay");
+
+        uint fromTokenToAmountBorrowed = debtToken.balanceOf(msg.sender) / debtToken.getDebtIndex() * DECIMALS;
+        totalBorrows -= fromTokenToAmountBorrowed;
+
         uint _borrowingRate = borrowingRate.getBorrowingRate();
         debtToken.recalculateDebtIndex(_borrowingRate);
         uint debtWithInterests = borrowerDebt * debtToken.getDebtIndex() / DECIMALS; 
 
         // FEES:  Calculate interest and reserve fee
         uint interest = debtWithInterests - borrowerDebt;
-        uint fee = (interest * lendingRate.reserveFactor()) / DECIMALS;
-        // Add fee to protocol reserve
-        //protocolReserve += fee;
-
-        totalBorrows -= borrowAmounts[msg.sender];
-        
+        uint fee = (interest * lendingRate.reserveFactor()) / DECIMALS;        
         // FEES: Subtract fee from total liquidity
         uint netRepayment = debtWithInterests - fee;
-        //totalLiquidity += debtWithInterests;
         totalLiquidity += netRepayment;
 
-        borrowAmounts[msg.sender] = 0;
         uint collateralToReturn = collateralBalances[msg.sender]; 
         collateralBalances[msg.sender] = 0; 
 
@@ -251,15 +240,18 @@ contract Pool {
         uint healthFactor = getHealthFactor(borrower, collateralPrice);
         require(healthFactor < 1e18, "The borrower is not liquidatable, because the health factor is safe");
 
+        uint fromTokenToAmountBorrowed = (debtToken.balanceOf(borrower) / debtToken.getDebtIndex()) * DECIMALS;
+        totalBorrows -= fromTokenToAmountBorrowed;
+        console.log("LIQUIDATE - fromTokenToAmountBorrowed %s", fromTokenToAmountBorrowed);
+        console.log("LIQUIDATE - totalBorrows - fromTokenToAmountBorrowed  %s", totalBorrows);
+
         // calculate the amount to be repaid to the lender
         uint _borrowingRate = borrowingRate.getBorrowingRate();
         debtToken.recalculateDebtIndex(_borrowingRate);
         uint debtWithInterests = borrowerDebtInToken * debtToken.getDebtIndex() / DECIMALS;
         console.log("LIQUIDATE - DEBT WITH INTERESTS %s", debtWithInterests);
-
-        totalBorrows -= borrowAmounts[borrower];
         totalLiquidity += debtWithInterests;
-        borrowAmounts[msg.sender] = 0;
+
         // A liquidation fee is applied to the seized collateral, for simplicity 100% of the collateral is seized
         // TODO perhaps shoudl retain a fee by the protocol
         uint collateralToSeize = collateralBalances[borrower]; 
@@ -281,13 +273,7 @@ contract Pool {
         debtToken.recalculateDebtIndex(_borrowingRate2);
         // The updated exchange rate ensures that all lenders’ IBTokens reflect the pool’s new value, including the added liquidity from the liquidation.
         ibToken.recalculateExchangeRate(_lendingRate2);
-        
-        // Transfer protocol fee to the reserve
-        //protocolReserve.collectETHFee{value: protocolFee}();
 
-        // // Transfer remaining collateral to the borrower
-        //console.log("LIQUIDATION - collateral to seize and return %s", collateralToSeize);
-        //payable(msg.sender).transfer(collateralToSeize);
         // Transfer liquidation penalty to the liquidator
         console.log("LIQUIDATION -transfer collateral to liquidator %s", liquidationPenalty);
         payable(msg.sender).transfer(liquidationPenalty);            
@@ -307,7 +293,8 @@ contract Pool {
 
         // burn the debt token
         debtToken.burn(borrower, borrowerDebtInToken);
-
+        console.log("LIQUIDATE - totalBorrows after update utilization rate %s", totalBorrows);
+        console.log("LIQUIDATE - _utilizationRate after update utilization rate %s", _utilizationRate); 
         emit Liquidation(borrower, msg.sender, debtWithInterests, liquidationPenalty, remainingCollateral, totalLiquidity, totalBorrows, _utilizationRate);
     }
 
@@ -332,25 +319,27 @@ contract Pool {
 
     function getHealthFactor(address borrower, uint newBorrowedAmount, uint newCollateralAmount, uint collateralPrice) internal view returns (uint) {
 
-        uint totalDebtValue = borrowAmounts[borrower] + newBorrowedAmount;
-        require(totalDebtValue > 0, "No debt to calculate health factor");
-        // TODO perhaps rename this loanToValue ???
+        console.log("health factor2: newBorrowedAmount", newBorrowedAmount);
+        console.log("health factor2: intial debt token balance", debtToken.balanceOf(borrower));
+        uint currentDebtValue = (debtToken.balanceOf(borrower) / debtToken.getDebtIndex()) * DECIMALS;
+        console.log("health factor2: total debt value %s", currentDebtValue);
+        uint totalDebtValue = currentDebtValue + newBorrowedAmount;
         uint totalCollateralValue =  (collateralBalances[borrower] + newCollateralAmount) * collateralPrice / 1e18;
-        console.log("total collateral value: %s", totalCollateralValue);
-        console.log("total debt value: %s", totalDebtValue);
         uint healthFactor = (totalCollateralValue * liquidationThreshold) / totalDebtValue;
-        console.log("health factor: %s", healthFactor);
+        console.log("health factor2: healthFactor %s", healthFactor);  
         return healthFactor;
     }
 
     function getHealthFactor(address borrower, uint collateralPrice) internal view returns (uint) {
-        uint totalDebtValue = borrowAmounts[borrower];
+
+        uint totalDebtValue = (debtToken.balanceOf(borrower) / debtToken.getDebtIndex()) * DECIMALS;
+        console.log("health factor2: existing total debt value %s", totalDebtValue);
         require(totalDebtValue > 0, "No debt to calculate health factor");
-        uint totalCollateralValue =  collateralBalances[borrower]  * collateralPrice / 1e18;
-        console.log("total collateral value: %s", totalCollateralValue);
-        console.log("total debt value: %s", totalDebtValue);
+        uint totalCollateralValue =  collateralBalances[borrower]  * collateralPrice / 1e18;        
+        console.log("getHealthFactor2: total collateral value: %s", totalCollateralValue);
+        console.log("getHealthFactor2: total debt value: %s", totalDebtValue);
         uint healthFactor = (totalCollateralValue * liquidationThreshold) / totalDebtValue;
-        console.log("health factor: %s", healthFactor);
+        console.log("health factor2: %s", healthFactor);
         return healthFactor;
     }
 }
