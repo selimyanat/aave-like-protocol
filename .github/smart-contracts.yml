@@ -1,0 +1,63 @@
+name: Smart Contracts CI
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"  # Trigger workflow for feature branches
+      
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test-smart-contracts:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Node.js and Yarn
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "yarn" # Cache Yarn dependencies automatically
+
+      # Step 3: Cache TypeScript and Hardhat Artifacts
+      - name: Cache Hardhat and TypeScript artifacts
+        uses: actions/cache@v3
+        with:
+          path: |
+            smart-contracts/node_modules
+            smart-contracts/cache
+            smart-contracts/artifacts
+          key: ${{ runner.os }}-yarn-${{ hashFiles('smart-contracts/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      # Step 4: Install dependencies
+      - name: Install dependencies
+        run: |
+          cd smart-contracts
+          yarn install
+
+      # Step 5: Compile contracts
+      - name: Compile contracts
+        run: |
+          cd smart-contracts
+          yarn compile
+
+      # Step 6: Generate TypeChain files
+      - name: Generate TypeChain files
+        run: |
+          cd smart-contracts
+          yarn typechain
+
+      # Step 7: Run tests
+      - name: Run tests
+        run: |
+          cd smart-contracts
+          yarn test
