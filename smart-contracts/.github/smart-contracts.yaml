@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - "features/**"  # Trigger workflow for feature branches
+      - "feature/**"  # Trigger workflow for feature branches
   pull_request:
     branches:
       - main
