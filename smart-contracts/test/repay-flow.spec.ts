@@ -63,6 +63,7 @@ describe("Repay flow", function() {
                             ethers.parseUnits("200080.317635009201508956", DECIMAL_18), // total liquidity
                             ZERO, // total borrowed
                             ZERO) // utilization rate
+                        
                 .to.emit(registry.debtToken, "Transfer")    
                     .withArgs(actors.bobTheBorrower.getAddress(), ZERO_ADDRESS, bobDebtTokenBalanceBeforeRepay)
                 .to.emit(registry.tradableToken, "Transfer")
@@ -91,7 +92,9 @@ describe("Repay flow", function() {
                     .to.emit(registry.protocolReserve, "TradableTokenWithdrawn")
                         .withArgs(actors.charlesTheProtocolAdmin.getAddress(), ethers.parseUnits("18.023830670108596738", DECIMAL_18))
                     .to.emit(registry.tradableToken, "Transfer")
-                        .withArgs(registry.protocolReserveAddress, actors.charlesTheProtocolAdmin.getAddress(), ethers.parseUnits("18.023830670108596738", DECIMAL_18))    
+                        .withArgs(registry.protocolReserveAddress, actors.charlesTheProtocolAdmin.getAddress(), ethers.parseUnits("18.023830670108596738", DECIMAL_18))   
+                        
+                        
         })
 
 

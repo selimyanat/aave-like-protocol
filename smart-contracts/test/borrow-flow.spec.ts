@@ -20,7 +20,6 @@ describe("Borrow flow", function() {
         registry = await ContractRegistry.getInstance();
         actors = await TestActorsRegistry.getInstance();
         
-        //await actors.charlesTheProtocolAdmin.transferTradableTokensTo(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND.toString());
         await actors.tradableTokenFoundation.airDrop(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND.toString());
         await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND.toString(), ONE_DAY)
         
@@ -73,7 +72,8 @@ describe("Borrow flow", function() {
 
         it ("Allows Bob to borrow tradable tokens with a sufficient collateral and health factor", async function () {
             
-            await expect(actors.bobTheBorrower.borrow(ONE_THOUSAND.toString(), ONE.toString()))
+            const tx1Response = await actors.bobTheBorrower.borrow(ONE_THOUSAND.toString(), ONE.toString())
+            await expect(tx1Response)
             .to.emit(registry.pool, "Borrowing")
                 .withArgs(
                     actors.bobTheBorrower.getAddress(), // borrower
@@ -90,8 +90,7 @@ describe("Borrow flow", function() {
             .to.emit(registry.debtToken, "Transfer")
                 .withArgs(ZERO_ADDRESS, actors.bobTheBorrower.getAddress(), ethers.parseUnits("1008.222312328767122000", DECIMAL_18))
             .to.emit(registry.debtToken, "DebtIndexUpdated")
-                .withArgs(ethers.parseUnits("1.008222312328767122", DECIMAL_18))
-            .to.changeEtherBalance(actors.bobTheBorrower.getAddress(), MINUS_ONE.toString());
+                .withArgs(ethers.parseUnits("1.008222312328767122", DECIMAL_18))            
             
             expect(await actors.bobTheBorrower.getDebtTokenBalance())
             .to.be
@@ -99,6 +98,33 @@ describe("Borrow flow", function() {
             expect(await registry.ibToken.getExchangeRate())
             .to.be
                 .equal(ethers.parseUnits("1.000175342465753424", DECIMAL_18).toString(), "The interest bearing token exchange rate has not changed since Alice's deposit")
+
+            // Check the balances in this statement do not merge with the previous one, it acts weirdly ignoring the previous statements
+            await expect(tx1Response).to.changeEtherBalance(actors.bobTheBorrower.getAddress(), MINUS_ONE.toString());
+                
+            // Bob wants to borrow more tokens
+            const tx2Response = await actors.bobTheBorrower.borrow(ONE_THOUSAND.toString(), ONE.toString());
+            await expect(tx2Response)
+            .to.emit(registry.pool, "Borrowing")
+                .withArgs(
+                    actors.bobTheBorrower.getAddress(), // borrower
+                    ONE_THOUSAND.toString(), // amount of token borrowed
+                    ethers.parseUnits("198000", DECIMAL_18), // total liquidity
+                    TWO_THOUSAND.toString(), // total borrows
+                    ethers.parseUnits("0.01", DECIMAL_18)) // utilization rate) 
+            .to.emit(registry.tradableToken, "Transfer")
+                .withArgs(registry.poolAddress, actors.bobTheBorrower.getAddress(), ONE_THOUSAND)
+            .to.emit(registry.borrowingRate, "BorrowingRateUpdated")
+                .withArgs(ethers.parseUnits("0.081000000000000000", DECIMAL_18))
+            .to.emit(registry.lendingRate, "LendingRateUpdated")
+                .withArgs(ethers.parseUnits("0.0648", DECIMAL_18))
+            .to.emit(registry.debtToken, "Transfer")
+                .withArgs(ZERO_ADDRESS, actors.bobTheBorrower.getAddress(), ethers.parseUnits("1008.446054814516793000", DECIMAL_18))
+            .to.emit(registry.debtToken, "DebtIndexUpdated")
+                .withArgs(ethers.parseUnits("1.008446054814516793", DECIMAL_18))
+
+            // Check the balances in this statement do not merge with the previous one, it acts weirdly ignoring the previous statements
+            await expect(tx2Response).to.changeEtherBalance(actors.bobTheBorrower.getAddress(), MINUS_ONE.toString());
         })
 
     })
