@@ -24,7 +24,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache: "yarn" # Cache Yarn dependencies automatically
+          cache: "yarn --frozen-lockfile" # Cache Yarn dependencies automatically
 
       # Step 3: Cache TypeScript and Hardhat Artifacts
       - name: Cache Hardhat and TypeScript artifacts
