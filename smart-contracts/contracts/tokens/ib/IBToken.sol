@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "./abstract/AbstractIBToken.sol";
+import "./AbstractIBToken.sol";
 
 
 import "hardhat/console.sol";

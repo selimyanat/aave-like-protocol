@@ -1,10 +1,10 @@
 
 import { expect } from "chai";
 import hre, { ethers } from "hardhat";
-import ContractRegistry from "./contracts/ContractRegistry";
-import TestActorsRegistry from "./actors/TestActorsRegistry";
-import {TWO_HUNDRED_THOUSAND, FOUR_HUNDRED_THOUSAND, ZERO, ZERO_ADDRESS, DECIMAL_18, ONE_HUNDRED_THOUSAND, ONE_THOUSAND, TWO_THOUSAND, ONE_DAY, ONE, MINUS_ONE} from "./utils/Constants";
-import BlockchainUtils from "./utils/BlockchainUtils";
+import ContractRegistry from "../contracts/ContractRegistry";
+import TestActorsRegistry from "../actors/TestActorsRegistry";
+import {TWO_HUNDRED_THOUSAND, FOUR_HUNDRED_THOUSAND, ZERO, ZERO_ADDRESS, DECIMAL_18, ONE_HUNDRED_THOUSAND, ONE_THOUSAND, TWO_THOUSAND, ONE_DAY, ONE, MINUS_ONE} from "../utils/Constants";
+import BlockchainUtils from "../utils/BlockchainUtils";
 
 
 describe("Borrow flow", function() {
