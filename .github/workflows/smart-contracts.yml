@@ -1,0 +1,47 @@
+name: Smart Contracts CI
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"  # Trigger workflow for feature branches
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test-smart-contracts:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Node.js and Yarn with caching
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: yarn
+          cache-dependency-path: smart-contracts/yarn.lock  # Specify the path to your yarn.lock
+
+      # Step 3: Install dependencies with frozen lockfile
+      - name: Install dependencies
+        working-directory: smart-contracts
+        run: yarn install --frozen-lockfile
+
+      # Step 4: Compile contracts
+      - name: Compile contracts
+        working-directory: smart-contracts
+        run: yarn compile
+
+      # Step 5: Generate TypeChain files
+      - name: Generate TypeChain files
+        working-directory: smart-contracts
+        run: yarn typechain
+
+      # Step 6: Run tests
+      - name: Run tests
+        working-directory: smart-contracts
+        run: yarn test
