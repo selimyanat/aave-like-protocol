@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.2;
-import "../abstract/AbstractDebtToken.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./AbstractIBToken.sol";
 
-contract MockDebtToken is AbstractDebtToken {
+contract MockIBToken is AbstractIBToken {
 
     uint private mockTimestamp;
 
-    constructor(string memory name, string memory symbol, uint _debtIndex, uint _mockTimestamp)
-        AbstractDebtToken(name, symbol, _debtIndex)
+    constructor(string memory name, string memory symbol, uint _exchangeRate, uint _mockTimestamp)
+        AbstractIBToken(name, symbol, _exchangeRate)
     {
         mockTimestamp = _mockTimestamp;
     }
@@ -20,5 +21,4 @@ contract MockDebtToken is AbstractDebtToken {
     function getElapsedTime() public view virtual override returns (uint) {
         return mockTimestamp;
     }
-
 }

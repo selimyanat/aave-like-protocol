@@ -3,13 +3,13 @@ pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "./IBToken.sol";
-import "./LendingRate.sol";
-import "./BorrowingRate.sol";
-import "./DebtToken.sol";
-import "./TradableToken.sol";
-import "./OracleGateway.sol";
-import "./ProtocolReserve.sol";
+import "../tokens/ib/IBToken.sol";
+import "../rates/LendingRate.sol";
+import "../rates/BorrowingRate.sol";
+import "../tokens/debt/DebtToken.sol";
+import "../tokens/TradableToken.sol";
+import "../oracle/OracleGateway.sol";
+import "../pool/ProtocolReserve.sol";
 import "hardhat/console.sol";
 
 contract Pool {
@@ -75,12 +75,7 @@ contract Pool {
         // the total supply of IBTokens or new deposits.
         // Adding new liquidity (deposits) does not directly affect the accrued interest or pool growth.
         require(_amount > 0, "The deposit must be greater than 0");
-        //console.log("getting exchange rate");
-        totalLiquidity += _amount;        
-        
-        // TEST ME
-        //depositAmounts[msg.sender] += _amount; 
-            
+        totalLiquidity += _amount;                   
         uint exchangeRate = ibToken.getExchangeRate();
 
         uint ibTokenAmount = _amount * exchangeRate / DECIMALS;
@@ -113,10 +108,7 @@ contract Pool {
         uint depositWithInterests = ibToken.balanceOf(msg.sender) * ibToken.getExchangeRate() / DECIMALS;
         require(totalLiquidity >= depositWithInterests, "The amount of token and interests cannot be withdrawn, because of insufficient liquidity");
         totalLiquidity -= depositWithInterests;
-
-        // TESTME is it still useful ???
-        //depositAmounts[msg.sender] = 0;  
-
+  
         uint _utilizationRate = getUtilizationRate();
         uint _borrowingRate = borrowingRate.recalculateBorrowingRate(_utilizationRate);
         uint _lendinglendingRate = lendingRate.recalculateLendingRate(_borrowingRate);
@@ -168,7 +160,7 @@ contract Pool {
     }
 
 
-    function fullRepay() public {
+    function repay() public {
 
         // Both the IBToken exchange rate and debt index must reflect accrued interest before adjusting balances.
         // the protocol should keep a part of the interest to be distributed to the lenders as a fee

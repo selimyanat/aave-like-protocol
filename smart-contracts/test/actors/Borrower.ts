@@ -61,7 +61,7 @@ export default class Borrower {
         const connectToTradableToken = registry.tradableToken.connect(this.account);
         await connectToTradableToken.approve(registry.poolAddress, amount);
         const connect = registry.pool.connect(this.account);
-        return await connect.fullRepay();
+        return await connect.repay();
     }
 
     public getInitialCollateralBalance(): BigInt {
