@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - "feature/**"  # Trigger workflow for feature branches
+      - "feature/**"
   pull_request:
     branches:
       - main
@@ -27,24 +27,20 @@ jobs:
 
       # Step 3: Install dependencies with frozen lockfile
       - name: Install dependencies
-        run: |
-          cd smart-contracts
-          yarn install --frozen-lockfile
+        working-directory: smart-contracts # Specify the correct working directory
+        run: yarn install --frozen-lockfile
 
       # Step 4: Compile contracts
       - name: Compile contracts
-        run: |
-          cd smart-contracts
-          yarn compile
+        working-directory: smart-contracts
+        run: yarn compile
 
       # Step 5: Generate TypeChain files
       - name: Generate TypeChain files
-        run: |
-          cd smart-contracts
-          yarn typechain
+        working-directory: smart-contracts
+        run: yarn typechain
 
       # Step 6: Run tests
       - name: Run tests
-        run: |
-          cd smart-contracts
-          yarn test
+        working-directory: smart-contracts
+        run: yarn test
