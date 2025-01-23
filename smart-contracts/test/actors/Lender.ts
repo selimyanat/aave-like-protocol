@@ -41,7 +41,7 @@ export default class Lender {
         return await connectToPool.deposit(amount);    
     }
 
-    async fullWithdraw(amount: string, days?: number): Promise<ContractTransactionResponse> {        
+    async withdrawAll(days?: number): Promise<ContractTransactionResponse> {        
         const registry = await ContractRegistry.getInstance();
         // simulate time passing to update the interest rate
         if (days !== undefined) {
@@ -50,7 +50,7 @@ export default class Lender {
             await registry.debtToken.setMockTimestamp(seconds);
         }   
         const connectToPool = registry.pool.connect(this.account);
-        return await connectToPool.fullWithdraw(amount)
+        return await connectToPool.withdraw()
     }
 
     async getIBTokenBalance(): Promise<BigInt> {

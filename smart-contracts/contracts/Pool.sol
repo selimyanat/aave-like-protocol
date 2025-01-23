@@ -40,9 +40,6 @@ contract Pool {
 
     uint public liquidationPenaltyRate;
 
-    // TODO PERHAPS NO NEED FOR THIS GIVEN THE EXISTENCE OF THE IB TOKEN
-    mapping (address => uint) depositAmounts;
-
     mapping(address => uint256) public collateralBalances;
 
     event DepositAdded(address indexed depositor, address token, uint amount, uint totalLiquidity, uint totalBorrows, uint utilizationRate);
@@ -82,7 +79,7 @@ contract Pool {
         totalLiquidity += _amount;        
         
         // TEST ME
-        depositAmounts[msg.sender] += _amount; 
+        //depositAmounts[msg.sender] += _amount; 
             
         uint exchangeRate = ibToken.getExchangeRate();
 
@@ -100,7 +97,7 @@ contract Pool {
         emit DepositAdded(msg.sender, address(tradableToken), _amount, totalLiquidity, totalBorrows, _utilizationRate);
     }
 
-    function fullWithdraw(uint _amount) public  {
+    function withdraw() public  {
         // IBToken exchange rate may need adjustment to ensure accurate withdrawal calculations. debt token 
         // index rate should not be updated
         // Large withdrawals reduce liquidity, increasing utilization and potentially affecting rates.
@@ -118,7 +115,7 @@ contract Pool {
         totalLiquidity -= depositWithInterests;
 
         // TESTME is it still useful ???
-        depositAmounts[msg.sender] = 0;  
+        //depositAmounts[msg.sender] = 0;  
 
         uint _utilizationRate = getUtilizationRate();
         uint _borrowingRate = borrowingRate.recalculateBorrowingRate(_utilizationRate);

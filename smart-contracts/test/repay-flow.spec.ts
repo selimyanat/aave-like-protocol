@@ -5,7 +5,6 @@ import ContractRegistry from "./contracts/ContractRegistry";
 import TestActorsRegistry from "./actors/TestActorsRegistry";
 import {TWO_HUNDRED_THOUSAND, FOUR_HUNDRED_THOUSAND, ZERO, ZERO_ADDRESS, DECIMAL_18, ONE_HUNDRED_THOUSAND, ONE_THOUSAND, TWO_THOUSAND, ONE_YEAR, ONE_DAY, ONE} from "./utils/Constants";
 import BlockchainUtils from "./utils/BlockchainUtils";
-import exp from "constants";
 
 
 describe("Repay flow", function() { 
@@ -21,7 +20,6 @@ describe("Repay flow", function() {
         registry = await ContractRegistry.getInstance();
         actors = await TestActorsRegistry.getInstance();
         
-        //await actors.charlesTheProtocolAdmin.transferTradableTokensTo(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND.toString());
         await actors.tradableTokenFoundation.airDrop(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND.toString());
         await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND.toString(), ONE_DAY)        
         await actors.bobTheBorrower.borrow(ONE_THOUSAND.toString(), ONE.toString());

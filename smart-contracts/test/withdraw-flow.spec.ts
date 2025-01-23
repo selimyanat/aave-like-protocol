@@ -43,7 +43,7 @@ describe("Withdraw flow", function() {
 
             await actors.vitoTheLender.deposit(TWO_HUNDRED_THOUSAND.toString(), ONE_DAY);
 
-            await expect(actors.aliceTheLender.fullWithdraw(TWO_HUNDRED_THOUSAND.toString(), ONE_YEAR))
+            await expect(actors.aliceTheLender.withdrawAll(ONE_YEAR))
             .to.emit(registry.pool, "FundsWithdrawn")
                 .withArgs(
                     actors.aliceTheLender.getAddress(), // depositor
@@ -72,7 +72,7 @@ describe("Withdraw flow", function() {
 
             await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND.toString());
 
-            await expect(actors.aliceTheLender.fullWithdraw(TWO_HUNDRED_THOUSAND.toString(), ONE_YEAR))
+            await expect(actors.aliceTheLender.withdrawAll(ONE_YEAR))
             .to.be
                 .revertedWith("The amount of token and interests cannot be withdrawn, because of insufficient liquidity")
 
