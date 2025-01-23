@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - "feature/**"
+      - "feature/**"  # Trigger workflow for feature branches
   pull_request:
     branches:
       - main
@@ -18,16 +18,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Node.js and Yarn
+      # Step 2: Set up Node.js and Yarn with caching
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache: yarn # Automatically cache Yarn dependencies
+          cache: yarn
+          cache-dependency-path: smart-contracts/yarn.lock  # Specify the path to your yarn.lock
 
       # Step 3: Install dependencies with frozen lockfile
       - name: Install dependencies
-        working-directory: smart-contracts # Specify the correct working directory
+        working-directory: smart-contracts
         run: yarn install --frozen-lockfile
 
       # Step 4: Compile contracts
