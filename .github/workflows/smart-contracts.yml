@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - "feature/**"  # Trigger workflow for feature branches
+      - "doc/**"  # Trigger workflow for feature branches
+      - "chore/**"  # Trigger workflow for feature branches
+      - "fix/**"  # Trigger workflow for feature branches
   pull_request:
     branches:
       - main
