@@ -22,9 +22,6 @@ describe("Liquidation flow", function() {
             
         await actors.tradableTokenFoundation.airDrop(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND.toString());
         await actors.tradableTokenFoundation.airDrop(actors.gregTheLiquidator.getAddress(), FOUR_HUNDRED_THOUSAND.toString());
-
-        //await actors.charlesTheProtocolAdmin.transferTradableTokensTo(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND.toString());
-        //await actors.charlesTheProtocolAdmin.transferTradableTokensTo(actors.gregTheLiquidator.getAddress(), FOUR_HUNDRED_THOUSAND.toString());
         
         await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND.toString(), ONE_DAY)        
         await actors.bobTheBorrower.borrow(ONE_THOUSAND.toString(), ONE.toString());
@@ -57,7 +54,7 @@ describe("Liquidation flow", function() {
         it ("Rejects the liquidation if the amount to repay Bob's debt is unsufficient to cover the interests", async function () {
             
             // decrease the collateral value to make the health factor unsafe
-            await registry.oracleGateway.updateCollateralPriceInTradableToken(FIVE_HUNDRED)
+            await registry.oracleGateway.updateCollateralPrice(FIVE_HUNDRED)
             
             await expect(actors.gregTheLiquidator.liquidate(actors.bobTheBorrower.getAddress(), ONE_THOUSAND.toString()))
             .to.be
@@ -67,7 +64,7 @@ describe("Liquidation flow", function() {
         it ("Accepts the Liquidation if the amount of token covers the borrowed amount with interests", async function () {
             
             // decrease the collateral value to make the health factor unsafe
-            await registry.oracleGateway.updateCollateralPriceInTradableToken(FIVE_HUNDRED)
+            await registry.oracleGateway.updateCollateralPrice(FIVE_HUNDRED)
 
             const expectedBobDebtToRepayWithInterest = ethers.parseUnits("1016.736420761406433787", DECIMAL_18).toString();
             const bobDebtTokenBalanceBeforeRepay = ethers.parseUnits("1008.222312328767122000", DECIMAL_18);

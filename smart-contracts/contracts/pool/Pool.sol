@@ -12,46 +12,83 @@ import "../oracle/OracleGateway.sol";
 import "../pool/ProtocolReserve.sol";
 import "hardhat/console.sol";
 
+/**
+ * @title Pool
+ * @dev Core contract for the lending protocol, managing deposits, withdrawals, borrowing, repayment, and liquidation.
+ * The Pool integrates interest-bearing tokens (IBTokens) for lenders, debt tokens (DebtToken) for borrowers, and handles collateralized lending using ETH as collateral.
+ */
 contract Pool {
 
+    /// @notice Decimal precision used for calculations (1e18).
     uint public constant DECIMALS = 1e18;
 
+    /// @notice The tradable ERC20 token supported by the pool.
     TradableToken public tradableToken;
 
+    /// @notice The interest-bearing token (IBToken) used to represent deposits.
     IBToken public ibToken;
 
+    /// @notice The debt token (DebtToken) used to track borrower obligations.
     DebtToken public debtToken;
 
+    /// @notice The contract managing the lending rate for depositors.
     LendingRate public lendingRate;
 
+    /// @notice The contract managing the borrowing rate for borrowers.
     BorrowingRate public borrowingRate;
 
+    /// @notice The contract providing price feeds for collateral assets.
     OracleGateway public oracleGateway;
 
+    /// @notice The protocol's reserve contract to manage protocol fees.
     ProtocolReserve public protocolReserve;
 
+    /// @notice Total liquidity in the pool, representing deposited assets available for borrowing.
     uint public totalLiquidity;
 
+    /// @notice Total borrowed amount across all borrowers.
     uint public totalBorrows;
 
+    /// @notice The collateral factor, determining how much collateral is required to borrow.
     uint public collateralFactor;
 
+    /// @notice The liquidation threshold, determining when a borrower is eligible for liquidation.
     uint public liquidationThreshold;
 
+    /// @notice The liquidation penalty rate applied during liquidation.
     uint public liquidationPenaltyRate;
 
+    /// @notice Mapping of collateral balances for each borrower.
     mapping(address => uint256) public collateralBalances;
 
+    /// @dev Emitted when a user deposits into the pool.
     event DepositAdded(address indexed depositor, address token, uint amount, uint totalLiquidity, uint totalBorrows, uint utilizationRate);
 
+    /// @dev Emitted when a user withdraws their deposit from the pool.
     event FundsWithdrawn(address indexed depositor, uint depositWithInterests, uint totalLiquidity, uint totalBorrows, uint utilizationRate);
 
+    /// @dev Emitted when a borrower borrows from the pool.
     event Borrowing(address indexed borrower, uint amount, uint totalLiquidity, uint totalBorrows, uint utilizationRate);
 
+    /// @dev Emitted when a borrower repays their loan.
     event Repayment(address indexed borrower, uint amount, uint collateralToReturn, uint totalLiquidity, uint totalBorrows, uint utilizationRate);
 
+    /// @dev Emitted when a borrower is liquidated.
     event Liquidation(address indexed borrower, address indexed liquidator, uint amount, uint liquidationPenalty, uint remainingCollateral, uint totalLiquidity, uint totalBorrows, uint utilizationRate);
 
+    /**
+     * @notice Deploys the Pool contract.
+     * @param _tradableToken Address of the tradable token (ERC20) used in the protocol.
+     * @param _ibToken Address of the IBToken contract.
+     * @param _lendingRate Address of the LendingRate contract.
+     * @param _borrowingRate Address of the BorrowingRate contract.
+     * @param _debtToken Address of the DebtToken contract.
+     * @param _oracleGateway Address of the OracleGateway contract.
+     * @param _protocolReserve Address of the ProtocolReserve contract.
+     * @param _collateralFactor Collateral factor for borrowing, scaled by `DECIMALS`.
+     * @param _liquidationThreshold Liquidation threshold for borrowers, scaled by `DECIMALS`.
+     * @param _liquidationPenaltyRate Liquidation penalty rate, scaled by `DECIMALS`.
+     */
     constructor(address _tradableToken, address _ibToken, address _lendingRate, address _borrowingRate, address _debtToken, address _oracleGateway, address _protocolReserve, uint  _collateralFactor, uint _liquidationThreshold, uint _liquidationPenaltyRate) {
 
         tradableToken = TradableToken(_tradableToken);        
@@ -66,6 +103,10 @@ contract Pool {
         debtToken = DebtToken(_debtToken);
     }
 
+    /**
+     * @notice Deposits tradable tokens into the pool and mints IBTokens for the depositor.
+     * @param _amount The amount of tradable tokens to deposit.
+     */
     function deposit(uint256 _amount) public {
 
         //  the update of IBtoken exchange rate is optional as IBToken holders benefit indirectly, as deposits 
@@ -92,6 +133,9 @@ contract Pool {
         emit DepositAdded(msg.sender, address(tradableToken), _amount, totalLiquidity, totalBorrows, _utilizationRate);
     }
 
+    /**
+     * @notice Allows users to withdraw their deposits with accrued interest.
+     */
     function withdraw() public  {
         // IBToken exchange rate may need adjustment to ensure accurate withdrawal calculations. debt token 
         // index rate should not be updated
@@ -120,6 +164,10 @@ contract Pool {
         emit FundsWithdrawn(msg.sender, depositWithInterests, totalLiquidity, totalBorrows, _utilizationRate);
     }
 
+    /**
+     * @notice Allows a user to borrow tokens using ETH as collateral.
+     * @param _amount The amount of tradable tokens to borrow.
+     */
     function borrow(uint _amount) public payable {
         // no need to update the IBToken exchnage rate, only the debt token is updated:
         // Borrowing increases debt, so the debt index must reflect all accrued interest before adding new debt.
@@ -132,7 +180,7 @@ contract Pool {
         require(totalLiquidity >= _amount, "The amount of token borrowed must be less than the available liquidity");        
         require(msg.value > 0, "The amount of token borrowed must have a collateral");
 
-        uint collateralPrice = oracleGateway.getCollateralPriceInTradableToken();
+        uint collateralPrice = oracleGateway.getCollateralPrice();
         uint collateralRatio = getCollateralRatio(msg.value, _amount, collateralPrice);
         console.log("BORROW - collateralRatio %s", collateralRatio);
         console.log("BORROW - collateralFactor %s", collateralFactor);
@@ -160,6 +208,11 @@ contract Pool {
     }
 
 
+    /**
+     * @notice Allows a borrower to repay their outstanding debt, including accrued interest.
+     * @dev Updates the debt index, redistributes fees to the protocol reserve, and returns collateral to the borrower.
+     * @dev Borrowers must approve the protocol to spend the repayment amount before calling this function.
+     */
     function repay() public {
 
         // Both the IBToken exchange rate and debt index must reflect accrued interest before adjusting balances.
@@ -219,6 +272,12 @@ contract Pool {
         emit Repayment(msg.sender, netRepayment, collateralToReturn, totalLiquidity, totalBorrows, _utilizationRate);        
     }
 
+    /**
+     * @notice Liquidates a borrower who has fallen below the liquidation threshold.
+     * @dev Transfers a portion of the borrower’s collateral to the liquidator as a reward and returns any remaining collateral to the borrower.
+     * @dev The liquidator must repay the borrower’s outstanding debt, including accrued interest.
+     * @param borrower The address of the borrower being liquidated.
+     */
     function liquidate(address borrower) public {
 
         console.log("LIQUIDATE - total liquidity before liquidation %s", totalLiquidity);
@@ -228,7 +287,7 @@ contract Pool {
         require(borrowerDebtInToken > 0, "The borrower has no debt to liquidate");
 
         // verify that the health factor is above or equal the liquidation threshold
-        uint collateralPrice = oracleGateway.getCollateralPriceInTradableToken();
+        uint collateralPrice = oracleGateway.getCollateralPrice();
         uint healthFactor = getHealthFactor(borrower, collateralPrice);
         require(healthFactor < 1e18, "The borrower is not liquidatable, because the health factor is safe");
 
@@ -301,6 +360,15 @@ contract Pool {
         return (totalBorrows * DECIMALS)/ (totalLiquidity + totalBorrows);
     }
 
+    /**
+     * @notice Calculates the collateral ratio for a given amount of collateral and borrowed tokens.
+     * @dev The collateral ratio is defined as:
+     *      Collateral Ratio = (Collateral Value * DECIMALS) / Borrowed Amount
+     * @param collateralAmount The amount of collateral in ETH.
+     * @param borrowedAmount The amount of tokens borrowed.
+     * @param collateralPrice The price of the collateral asset in terms of the tradable token.
+     * @return The collateral ratio as a percentage scaled by `DECIMALS`.
+     */
     function getCollateralRatio(uint collateralAmount, uint borrowedAmount, uint collateralPrice) internal pure returns (uint) {
         uint collateralValue = collateralPrice * collateralAmount / DECIMALS;
         console.log("SY - collateralValue %s", collateralValue);
@@ -309,6 +377,16 @@ contract Pool {
         return collateralRatio;
     }
 
+    /**
+     * @notice Calculates the borrower’s health factor based on their collateral and debt.
+     * @dev The health factor is defined as:
+     *      Health Factor = (Total Collateral Value * Liquidation Threshold) / Total Debt Value
+     * @param borrower The address of the borrower.
+     * @param newBorrowedAmount The new amount the borrower wishes to borrow.
+     * @param newCollateralAmount The additional collateral the borrower is depositing.
+     * @param collateralPrice The price of the collateral asset in terms of the tradable token.
+     * @return The health factor as a percentage scaled by `DECIMALS`.
+     */
     function getHealthFactor(address borrower, uint newBorrowedAmount, uint newCollateralAmount, uint collateralPrice) internal view returns (uint) {
 
         console.log("health factor2: newBorrowedAmount", newBorrowedAmount);
@@ -322,6 +400,12 @@ contract Pool {
         return healthFactor;
     }
 
+    /**
+     * @notice Calculates the borrower’s health factor based on their existing collateral and debt.
+     * @param borrower The address of the borrower.
+     * @param collateralPrice The price of the collateral asset in terms of the tradable token.
+     * @return The health factor as a percentage scaled by `DECIMALS`.
+     */
     function getHealthFactor(address borrower, uint collateralPrice) internal view returns (uint) {
 
         uint totalDebtValue = (debtToken.balanceOf(borrower) / debtToken.getDebtIndex()) * DECIMALS;
