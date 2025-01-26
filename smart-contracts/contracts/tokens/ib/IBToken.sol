@@ -7,15 +7,20 @@ import "./AbstractIBToken.sol";
 import "hardhat/console.sol";
 
 /**
-When using interest-bearing tokens (IBToken) for lenders and debt tokens for borrowers, the yield distribution to 
-lenders is handled implicitly through the increasing exchange rate of the IBToken. You do not need to explicitly 
-distribute yield manually because the exchange rate mechanics already incorporate the accrued interest, ensuring 
-that lenders' tokens automatically reflect their share of the pool.
+ * @title IBToken
+ * @dev A concrete implementation of the AbstractIBToken contract. This token represents interest-bearing tokens for lenders in a lending protocol.
+ * The IBToken reflects the growth of the underlying asset pool through an increasing exchange rate, which implicitly distributes yield to lenders.
  */
-
 abstract contract IBToken is AbstractIBToken {
 
 
+    /**
+     * @notice Deploys the IBToken contract.
+     * @dev Initializes the contract using the AbstractIBToken constructor.
+     * @param name The name of the IBToken.
+     * @param symbol The symbol of the IBToken.
+     * @param _exchangeRate The initial exchange rate of the IBToken in terms of the underlying asset.
+     */
     constructor(string memory name, string memory symbol, uint _exchangeRate) AbstractIBToken(name, symbol,  _exchangeRate) {
     }
 }
