@@ -3,7 +3,6 @@ pragma solidity ^0.8.2;
 
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "hardhat/console.sol";
 
 /**
  * @title AbstractDebtToken
@@ -70,14 +69,9 @@ abstract contract AbstractDebtToken is ERC20{
      * @return The updated debt index.
      */
     function recalculateDebtIndex(uint borrowingRate) external returns (uint) {
-        console.log("DEBT-TOKEN borrowing rate %s", borrowingRate);
-        console.log("DEBT-TOKEN initital debt index %s", debtIndex);
         uint timeElapsed = getElapsedTime();
-        console.log("DEBT-TOKEN elapsed time %s", timeElapsed);
         uint interestAccrued = (borrowingRate * timeElapsed) / ONE_YEAR;
-        console.log("DEBT-TOKEN interestAccrued %s", interestAccrued);
         debtIndex = (debtIndex * (DECIMALS + interestAccrued)) / DECIMALS;
-        console.log("DEBT-TOKEN  debtIndex %s", debtIndex);
         lastUpdateTimestamp = block.timestamp;
         emit DebtIndexUpdated(debtIndex);
         return debtIndex;

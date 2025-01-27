@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.2;
 
-
-import "hardhat/console.sol";
-
 /// @title LendingRate Contract
 /// @notice This contract calculates the lending rate based on the borrowing rate and a reserve factor.
 /// @dev The lending rate is adjusted according to the reserve factor to determine the annualized return for lenders.
