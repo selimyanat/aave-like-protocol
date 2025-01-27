@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import "hardhat/console.sol";
-
 /**
  * @title BorrowingRate
  * @dev A contract for calculating and managing the borrowing rate in a lending protocol.
@@ -48,6 +46,7 @@ contract BorrowingRate {
      * @return The newly calculated borrowing rate.
      */
     function recalculateBorrowingRate(uint utilizationRate) external returns (uint) {
+        
         borrowingRate = baseBorrowingrate + (utilizationRate * multiplier) / DECIMALS;
         emit BorrowingRateUpdated(borrowingRate);
         return borrowingRate;

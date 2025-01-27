@@ -3,7 +3,8 @@ pragma solidity ^0.8.28;
 
 /**
  * @title OracleGateway
- * @dev A simple oracle contract to store and update the price of a collateral asset in terms of tradable token.
+ * @dev A simple oracle contract to store and update the price of a collateral asset in terms of tradable token (like
+ * 1 ETH is worth 1000 tradable tokens, where ETH is the collateral).
  */
 contract OracleGateway {
 
