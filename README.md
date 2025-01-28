@@ -12,8 +12,12 @@ DSICLAIMER: I am not a DeFi expert. Like you, I sought to better understand the 
 
 # A Lending protocol: The Big Picture
 
-
 ![Lending Protocol Use Case Diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/selimyanat/aave-like-protocol/docs/lending-protocol-use-case-diag.puml)
+
+
+# Vocubulary
+
+
 
 
 # References
