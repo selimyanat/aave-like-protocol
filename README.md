@@ -10,17 +10,9 @@ on key concepts and provide you with a solid fundamentals. So without further ad
 
 DSICLAIMER: I am not a DeFi expert. Like you, I sought to better understand the concepts by getting my hands dirty. :)
 
-# A Lending protocol: The Big Picture
+* [Lending in DeFI and TradFi](docs/lending-in-defi-and-tradfi.md)
+* [Why is collateral needed ?](docs/why-is-collateral-needed.md)
+* [If You Have Collateral, Why Not Just Sell?](docs/if-you-have-collateral-why-not-just-sell.md)
+* [References](docs/references.md)
 
-![Lending Protocol Use Case Diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/selimyanat/aave-like-protocol/docs/lending-protocol-use-case-diag.puml)
-
-
-# Vocubulary
-
-
-
-
-# References
-
-- [Deep Dive on Compound, Aave & MakerDAO] (https://mirror.xyz/0x34ddd9223D9DDb6B56F640824Af6FCC31e1deBF4/3GoZd2GNb4f1s8RogcALt59h9GSQqLsSDc6fM019pM0)
 
