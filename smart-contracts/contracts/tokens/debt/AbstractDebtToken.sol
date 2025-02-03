@@ -38,6 +38,7 @@ abstract contract AbstractDebtToken is ERC20{
      * @param _debtIndex The initial value of the debt index.
      */
     constructor(string memory name, string memory symbol, uint _debtIndex) ERC20(name, symbol) {
+        // TODO should start at 1e18 and increase over time as interest accrues
         initialDebtIndex = _debtIndex;
         debtIndex = _debtIndex;
         lastUpdateTimestamp = block.timestamp;
