@@ -2,15 +2,6 @@
 
 # Liquidity pool
 
-
-DeFI relies on blockchain where anonymity is a
-cornerstone where no history of repayment is attached to wallet that is the main idenfier for individual.  
-
-
-
- Blockchain is conducted with anonymized wallets (for now), and there is no history of repayment or liquidity to attach to these transactions. For the most part, blockchain protocols resolve this by requiring collateral of some sort, usually valued significantly more than the amount of the loan. Collateralization will be discussed further, but both methods of reducing risk have problems.
-
-
 # Interests
 
 operates differently than traditional finance (TradFi). From
@@ -32,19 +23,6 @@ Traditional Finance (TradFi) and Decentralized Finance (DeFi) represent two dist
 
 ![Lending Protocol Use Case Diagram](lending-protocols-use-case.png)
 
-
-
-
-Lending protocols are essentially digital platforms built on blockchains that allow people to lend and borrow crypto without needing a bank or intermediary - trust-less system (no credit checks nor personal guarantees) . Among the most popular lending protocols: 
-** Aave
-** MakerDAO
-** Compound
-
-
-Bascially a lender, deposits some crypto on the lending protocol in exchange of interests. A borrower, put in collateral an asset in exchange of the
-traded asset, the whole point for a borrower is to keep their collateral without requring them to sell them. 
-
-Lending/borrowing protocols allow users to offer crypto loans by staking their assets in them without the need for a bank account. Users are given rewards, usually in the form of the protocol's native token.
 
 
 

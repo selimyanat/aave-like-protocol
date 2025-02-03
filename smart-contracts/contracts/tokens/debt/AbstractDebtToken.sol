@@ -70,6 +70,10 @@ abstract contract AbstractDebtToken is ERC20{
      */
     function recalculateDebtIndex(uint borrowingRate) external returns (uint) {
         uint timeElapsed = getElapsedTime();
+        // The debt index (debtIndex) is NOT the APR, but rather a cumulative tracker of interest accrual over time.do
+        // TODO fix the interestAccrued calculation, it should be linear not exponential
+        // uint interestAccrued = (borrowingRate * timeElapsed * debtIndex) / (DECIMALS * ONE_YEAR);
+        // debtIndex = debtIndex + interestAccrued;
         uint interestAccrued = (borrowingRate * timeElapsed) / ONE_YEAR;
         debtIndex = (debtIndex * (DECIMALS + interestAccrued)) / DECIMALS;
         lastUpdateTimestamp = block.timestamp;
