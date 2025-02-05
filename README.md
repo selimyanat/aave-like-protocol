@@ -16,8 +16,6 @@ on key concepts and provide you with a solid fundamentals. So without further ad
 * [Tracking interest through interest bearing tokens](docs/tracking-lender-interest-using-token.md)
 * [Mitigating Collateral Price Fluctuations: Understanding Liquidation](docs/liquidation.md)
 * [References](docs/references.md)
-Collateral price volatility
-
 
 > [!WARNING]  
 > DISCLAIMER: I am not a DeFi expert / guru. Like you, I sought to better understand the concepts by getting my hands dirty. :)
