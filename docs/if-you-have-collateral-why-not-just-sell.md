@@ -1,4 +1,4 @@
-# Why borrow if you have to provide collateral ?
+# Why Borrow If You Have To Provide Collateral ?
 
 The principal reason for a borrower to borrow against an asset is that it allows to access liquidity without
 selling their assets, which is partularly useful for the following reasons - **non exhaustive list**

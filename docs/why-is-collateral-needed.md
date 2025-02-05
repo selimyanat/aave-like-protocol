@@ -1,4 +1,4 @@
-# Why is a collateral needed ?
+# Why Is A Collateral Needed ?
 
 To understand the rational behind the collateral mechanism in DeFI, let's draw a parallel with its counterpart in TradFi:
 The credit score. This nuumerical value represnets a borrower's creditworthiness and indicates the likelihood of repaying

@@ -201,9 +201,13 @@ contract Pool is ReentrancyGuard {
         require(debtTokenAmount > 0, "The borrower has no debt to repay");
 
         // Calculate the amount to be repaid: debt + interest + protocol fee
+        // TODO: the debt index should be updated after the interest is calculated and use the index at the time of borrowing
+        // TODO: uint totalDebtOwed = (borrowerDebt * debtIndex) / borrowerDebtIndexAtBorrowing;
+
         uint fromTokenToAmountBorrowed = debtTokenAmount / debtToken.getDebtIndex() * DECIMALS;
         totalBorrows -= fromTokenToAmountBorrowed;
         uint _borrowingRate = borrowingRate.getBorrowingRate();
+        // TODO this is wrong the index should be updated after the interest is calculated. 
         debtToken.recalculateDebtIndex(_borrowingRate);
         uint debtWithInterests = debtTokenAmount * debtToken.getDebtIndex() / DECIMALS; 
         uint interest = debtWithInterests - debtTokenAmount;

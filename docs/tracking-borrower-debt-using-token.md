@@ -1,44 +1,56 @@
-# Tracking borrower debt using debt token
+# Tracking Borrower Debt Using Debt Token
 
-Traditionnally, without tokenization, a borrower debt would involve the following:
+## The Problem: Traditional Debt Tracking
+
+Traditionnally, without tokenization, tracking a borrower debt would involve the following:
 
 * Keeping a ledger that tracks each borrower's outstanding debt.
-* When interest accrues, the protocol updates each borrower's debt balance.
+* Updating each borrower's balance every time interest accrues.
 
-In the context of blockchain and smart contracts, these operations leads to significant
-gas consumption and cost for users.
+In the context of blockchain and smart contracts, these operations lead to significant
+gas costs and inneficiencies, making debt tracking expensive.
 
-Aave introduced a more efficient solution by representing debt as debt tokens. Instead of 
-updating individual balances, Aave utilizes a debt index that scales the value of all 
-outstanding debt tokens over time. This index grows based on the borrowing rate (APR) and 
-is updated whenever an operation impacts the utilization rate, such as a new deposit, 
-repayment, or liquidation.
+## Aave’s Solution: Debt Tokens & Debt Index
 
-# How the debt index works ?
+Aave introduced a more efficient solution by issuing "debt tokens" to represent borrower's
+debt:
+* Instead of updating individual balances, Aave utilizes a debt index that scales the 
+value of all outstanding debt tokens over time. 
+* This index grows based on the borrowing rate (APR) and is updated whenever an operation 
+impacts the utilization rate, such as a new deposit, repayment, or liquidation.
 
-The debt index is calculated using the following formula:
+## How Does The Debt Index Work ?
 
-New Debt Index = Current Debt Index + (Borrowing Rate X Time Elapsed X Current Debt Index) / One Year
+### Debt Index Formula (Linear APR Growth)
+
+* New Debt Index = Current Debt Index + Interest accrue
+* Interest accrues = Borrowing Rate X Time Elapsed X Debt index / ONE_YEAR;
+
+### Why This Works ?
+
+* The borrowing rate tells us how much interest should be applied.
+* The time elapsed ensures interest is applied proportionally over time.
+* The debt index scales the interest automatically for all borrowers, ensuring efficiency.
 
 To determine how much a borrower owes at any point in time, we use the debt index to scale 
 their initial borrowed amount:
 
-Total Debt Owed = Borrowed Amount × Current Debt Index / Debt Index at Borrowing
+* Total Debt Owed = Borrowed Amount × Current Debt Index / Debt Index at Borrowing
+
+### Example: Debt Index In Action
 
 Let's take an example to illustrate that: 
 
-* Starting Debt Index = 1%
+* Starting Debt Index = 100%
 * Suppose a fixed Borrowing APR = 10% to facilitate the explanation
-* Alice borrows 1000 USDC, the debt index is equal to 1%
-* After a year, the debt index at repayment is equal now to 1.1%
+* Alice borrows 1000 USDC, the debt index is equal to 100%
+* After a year, the debt index is equal now to 110%
 * Alice's total debt is: 1000 USDC * (1.1/1) = 1100 USDC
+
 * Later ...
-* Bob borrows 1000 USDC, the debt index is equal to 1.1%
-* After a year, the debt index at repayment is equal now to 1.21%
-* Alice's total debt is: 1000 USDC * (1.21/1.1) = 1100 USDC
 
-# In summary
+* Bob borrows 1000 USDC, the debt index is equal to 110%
+* After a year, the debt index is equal now to 121%
+* Bob's total debt is: 1000 USDC * (1.21/1.1) = 1100 USDC
 
-Beyond the efficiency that bring debt tokens, the benefits of tokenization in general (
-fractional ownership, increased accessibility, etc) also apply to debt tokens. This innovation
-has the potential to transform how we think about and manage debt within the DeFi ecosystem.
+Bob pays the same interest (10%) as Alice for his loan duration, even though he borrowed later.
