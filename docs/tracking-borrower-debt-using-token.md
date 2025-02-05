@@ -39,8 +39,6 @@ their initial borrowed amount:
 
 ### Example: Debt Index In Action
 
-Let's take an example to illustrate that: 
-
 * Starting Debt Index = 100%
 * Suppose a fixed Borrowing APR = 10% to facilitate the explanation
 * Alice borrows 1000 USDC, the debt index is equal to 100%

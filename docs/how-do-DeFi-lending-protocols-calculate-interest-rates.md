@@ -21,7 +21,7 @@ these metrics.
 > Aave offers interest rates that can be stable as well.
 
 
-## Annual Percentage Rate (APR):
+## Annual Percentage Rate (APR)
 APR is typially used for borrowers and represents the cost of borrowing without 
 compounding. In other words, it assumes the interest is calculated just once a year. 
 Here's an example to illustrate that:
@@ -33,7 +33,7 @@ Here's an example to illustrate that:
 > moment unless it was specified as a fixed and stable rate.
 
 
-## Annual Percentage Yield (APY): 
+## Annual Percentage Yield (APY) 
 APY is typically used for lenders,and measures the interest rate with compounding included,
 leading to higher effective returns. In other words, the interest rate is added periodically 
 (daily, year, block, etc.) to the original amount and future interest is calculated on this 

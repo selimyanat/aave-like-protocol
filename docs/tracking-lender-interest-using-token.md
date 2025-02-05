@@ -41,8 +41,6 @@ their initial deposit amount:
 
 ### Example: Exchnage Rate In Action
 
-Let's take an example to illustrate that: 
-
 * Starting Exchange Rate = 100%
 * Suppose a fixed Lending APY = 10% to facilitate the explanation
 * Alice deposits 1000 USDC, the exhange rate is equal to 100%

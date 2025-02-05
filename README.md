@@ -10,9 +10,13 @@ on key concepts and provide you with a solid fundamentals. So without further ad
 
 * [Lending in DeFI and TradFi: The structural difference](docs/lending-in-defi-and-tradfi.md)
 * [Why is collateral needed ?](docs/why-is-collateral-needed.md)
-* [If You Have Collateral, Why Not Just Sell?](docs/if-you-have-collateral-why-not-just-sell.md)
+* [If You Have Collateral, why not just sell?](docs/if-you-have-collateral-why-not-just-sell.md)
 * [How do DeFi lending protocols calculate interest rates ?](docs/how-do-DeFi-lending-protocols-calculate-interest-rates.md)
+* [Tracking debt through debt tokens](docs/tracking-borrower-debt-using-token.md)
+* [Tracking interest through interest bearing tokens](docs/tracking-lender-interest-using-token.md)
+* [Mitigating Collateral Price Fluctuations: Understanding Liquidation](docs/liquidation.md)
 * [References](docs/references.md)
+Collateral price volatility
 
 
 > [!WARNING]  
