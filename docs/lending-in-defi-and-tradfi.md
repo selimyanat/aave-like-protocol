@@ -1,5 +1,5 @@
 
-# Lending in DeFI and TradFi: The Structural Difference
+# ☯️ Lending in DeFI and TradFi: The Structural Difference 
 
 > [!NOTE]  
 > The following will not provde an exhaustive comparison between lending in DeFi and TradFi as this topic has been

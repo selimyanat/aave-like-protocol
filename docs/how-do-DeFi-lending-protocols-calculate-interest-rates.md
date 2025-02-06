@@ -1,8 +1,8 @@
-# How Do DeFi Lending Protocols Calculate Interest Rates?
+# 🧮  How Do DeFi Lending Protocols Calculate Interest Rates?
 
 In `TradFi`, interest rates are determined by central banks and governments, taking into 
 account factors such as inflation, economic growth, and credit risk. Conversely, 
-interest rates in `DeFi` lending protocols such as Aave tend to be `more` dynamic and are 
+interest rates in `DeFi` lending protocols such as `Aave` tend to be `more` dynamic and are 
 based on market conditions, aka `supply and demand`:
 
 * When the demand for borrowing is high, interest rates tend to rise, incentivizing more 

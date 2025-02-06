@@ -1,4 +1,4 @@
-# Tracking Borrower Debt Using Debt Token
+# 🪙 Tracking Borrower Debt Using Debt Token
 
 ## The Problem: Traditional Debt Tracking
 

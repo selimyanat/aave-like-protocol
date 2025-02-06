@@ -1,74 +1,69 @@
-# Tracking Lender Interest Using Interest-Bearing Tokens
+# 🪙 Tracking Borrower Debt Using Debt Token
 
-## The Problem: Traditional Interest Tracking
+## The Problem: Traditional Debt Tracking
 
-Traditionnally, without tokenization, tracking a lender's interest would involve the following:
+Traditionnally, without tokenization, tracking a borrower debt would involve the following:
 
-* Keeping a ledger that tracks each lender's deposit.
-* Updating each lender's balance every time interest accrues.
+* Keeping a ledger that tracks each borrower's outstanding debt.
+* Updating each borrower's balance every time interest accrues.
 
 In the context of blockchain and smart contracts, these operations lead to significant
-gas costs and inneficiencies, making interest tracking expensive.
+gas costs and inneficiencies, making debt tracking expensive.
 
-## Aave’s Solution: Interest-Bearing Tokens & Exchange Rate
+## Aave’s Solution: Debt Tokens & Debt Index
 
-Aave introduced a more efficient solution by issuing "interest-bearing tokens" to represent
-lender's interest:
-
-* Instead of updating individual balances, Aave utilizes an exchange rate that scales the 
-value of all outstanding interest bearing tokens over time. 
-* This exchange rate grows based on the borrowing rate (APY) and is updated whenever an operation 
+Aave introduced a more efficient solution by issuing "debt tokens" to represent borrower's
+debt:
+* Instead of updating individual balances, Aave utilizes a debt index that scales the 
+value of all outstanding debt tokens over time. 
+* This index grows based on the borrowing rate (APR) and is updated whenever an operation 
 impacts the utilization rate, such as a new deposit, repayment, or liquidation.
 
+## How Does The Debt Index Work ?
 
-## How Does The Exchange Rate Work ?
-
-### Exchange Rate Formula (Exponential APY Growth)
+### Debt Index Formula (Linear APR Growth)
 
 <pre>
-New Exchange Rate = Current Exchange Rate X (1 + Interest Accrued)
+New Debt Index = Current Debt Index + Interest accrue
 </pre>
 
 <pre>
-Interest Accrued = Lending Rate × Time Elapsed / ONE_YEAR
+Interest accrues = Borrowing Rate X Time Elapsed X Debt index / ONE_YEAR
 </pre>
 
-### Why this works
+### Why This Works ?
 
-* The lending rate tells us how much interest should be applied.
+* The borrowing rate tells us how much interest should be applied.
 * The time elapsed ensures interest is applied proportionally over time.
-* The exchange rate scales the interest automatically for all depositors, ensuring efficiency.
+* The debt index scales the interest automatically for all borrowers, ensuring efficiency.
 
-To determine how much a lender owes at any point in time, we use the exchange rate to scale 
-their initial deposit amount:
+To determine how much a borrower owes at any point in time, we use the debt index to scale 
+their initial borrowed amount:
 
 <pre>
-Total amount earned = Deposit amount × Current Exchange Rate / Exchange Rate at Lending
+Total Debt Owed = Borrowed Amount × Current Debt Index / Debt Index at Borrowing
 </pre>
 
-### Example: Exchnage Rate In Action
+### Example: Debt Index In Action
 
-#### Initial Setup
-* **Starting Exchange Rate**: 100%
-* **Fixed Lending APY**: 10% (for simplicity)
+#### ⚙️ Initial Setup
+* **Starting Debt Index**: 100%
+* **Fixed Borrowing APR**: 10% (for simplicity)
 
-#### Alice makes a deposit
-* **Alice deposits 1000 USDC**
-    * Initial Exchange Rate: 100%
-    * After a year, the Exchange rate increases to 110.5% (10% APY)
-    * **Alice's total balance** is: <pre> 1000 USDC * (1.105/1) = 1105 USDC </pre> 
+#### 🙇‍♀️ Alice takes a loan
 
-> [!NOTE]
-> Alice earns **compounded** interest, bringing her total to 1,105 USDC.
+* **Alice borrows 1000 USDC**: 
+    * Initial Debt Index: 100%
+    * After 1 year, the Debt Index increases to 110%  (10% APR)
+    * **Alice's total debt** is: <pre> 1000 USDC * (1.1/1) = 1100 USDC </pre>
 
+#### 🙇‍♂️ Bob takes a loan 
 
-#### Bob makes a deposit
-
-* **Bob deposits 1000 USDC**
-    * Initial Exchange Rate: 110.5%
-    * After a year, the Exchange rate increases to 122.1% (10% APY)
-    * **Bob's total balance** is: <pre> 1000 USDC * (1.221/1.105) = 1100 USDC </pre> 
+*  **Bob borrows 1000 USDC**:
+    * Initial Debt Index: 110%
+    * After 1 year, the Debt Index increases to 121% (10% APR)
+    * **Bob's total debt** is: <pre> 1000 USDC * (1.21/1.1) = 1100 USDC </pre>
 
 > [!NOTE]  
-> Bob earns the same interest (10%) as Alice for his deposit duration, even though he 
-> deposited later.
+> Bob pays the same interest (10%) as Alice for his loan duration, even though he borrowed 
+> later.

@@ -1,4 +1,4 @@
-# Mitigating Collateral Price Fluctuations: Understanding Liquidation
+# 📈  Mitigating Collateral Price Fluctuations: Understanding Liquidation
 
 ## The problem: Collateral price fluctuations
 
@@ -38,19 +38,19 @@ The remaining collateral is returned to the borrower.
 
 ## Example: Liquidation in Action
 
-### Initial Setup
+### ⚙️ Initial Setup
 * **Alice deposits 5 ETH** (worth 10000$) as collateral.
 * **She borrows 6000 USDC**.
 * The protocol requires **a minimum health factor of 1.2** (meaning Alice’s collateral must 
 be at least 120% of her borrowed amount).
 
-### Market fluctuation
+### 📈 Market fluctuation
 * **ETH’s price drops** from 2000$ to 1300$.
 * **Alice’s collateral value falls** to 6500$, but she still owes 6000 USDC.
 * **New health factor** is: <pre> 6500 / 6000 = 1.08 < 1.2 </pre>
 * **Alice’s loan is now under-collateralized** and eligible for liquidation.
 
-### Liquidation process
+### 🏛️ Liquidation process
 * **A liquidator repays the full loan 6000 USDC** of Alice’s loan.
 * In return, the liquidator receives **1 ETH** of Alice's collateral (20%) as an incentive.
 * The **remaining collateral 4 ETH** is returned to Alice.

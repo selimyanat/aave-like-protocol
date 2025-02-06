@@ -1,4 +1,4 @@
-# Why Is A Collateral Needed ?
+# 🛡️ Why Is A Collateral Needed ?
 
 To understand the rationale behind the collateral mechanism in DeFi, let's draw a parallel 
 with its counterpart in `TradFi`: the credit score.
@@ -9,12 +9,12 @@ In traditional finance, a credit score is a numerical value that represents a bo
 creditworthiness and indicates the likelihood of repaying a loan on time. It is determined 
 by the borrower's financial history, which includes information like:
 
-* Total debts
-* Repayment history
-* Age
-* Health
-* Profession
-* Other risk indicators
+* Total debts 💳
+* Repayment history 📜
+* Age 🎂
+* Health 🏥
+* Profession 💼
+* Other risk indicators ⚠️
 
 ## The DeFi Approach
 
