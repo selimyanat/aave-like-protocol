@@ -1,0 +1,60 @@
+ @startuml
+
+left to right direction
+skinparam packageStyle rectangle
+
+title Aave-like Protocol
+
+actor lender
+actor borrower
+actor liquidator
+actor oracle
+
+package "Lending Protocol" {
+
+together {
+  usecase "Deposit funds" as UC1
+  usecase "Withdraw funds" as UC2
+  usecase "Earn interests"  as UC3
+}
+
+together {
+  usecase "Take loan" as UC4  
+  usecase "Deposit collateral"as UC5
+  usecase "Repay loan" as UC6
+  usecase "Pay interests" as UC7
+  usecase "Pay protocol fee" as UC8
+  usecase "Receive collateral back" as UC9
+  usecase "Receive part of the collateral after liquidation" as UC10
+}
+
+together {
+  usecase "Monitor loans" as UC11
+  usecase "Liquidate under-collaterized loans" as UC12
+  usecase "Receive part of the collateral" as UC13  
+}
+
+together {
+  usecase "Provide realtime price for collateral" as UC14
+}
+
+lender --> UC1
+lender --> UC2
+UC2 --> UC3
+
+borrower --> UC4
+borrower --> UC6
+borrower --> UC10
+UC4 --> UC5
+UC6 --> UC7
+UC6 --> UC8
+UC6 --> UC9
+
+
+liquidator --> UC11
+liquidator --> UC12
+UC12 --> UC13
+
+oracle --> UC14
+
+@enduml

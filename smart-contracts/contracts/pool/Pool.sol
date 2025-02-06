@@ -138,6 +138,7 @@ contract Pool is ReentrancyGuard {
 
         // Calculate the amount to be withdrawn: deposit + interest
         uint _lendingRate = lendingRate.getLendingRate();
+        // TODO this is reduncant and not useful given we do it at the end of the function
         ibToken.recalculateExchangeRate(_lendingRate);//
         uint depositWithInterests = ibTokenAmount * ibToken.getExchangeRate() / DECIMALS;
         require(totalLiquidity >= depositWithInterests, "The amount of token and interests cannot be withdrawn, because of insufficient liquidity");
@@ -201,9 +202,13 @@ contract Pool is ReentrancyGuard {
         require(debtTokenAmount > 0, "The borrower has no debt to repay");
 
         // Calculate the amount to be repaid: debt + interest + protocol fee
+        // TODO: the debt index should be updated after the interest is calculated and use the index at the time of borrowing
+        // TODO: uint totalDebtOwed = (borrowerDebt * debtIndex) / borrowerDebtIndexAtBorrowing;
+
         uint fromTokenToAmountBorrowed = debtTokenAmount / debtToken.getDebtIndex() * DECIMALS;
         totalBorrows -= fromTokenToAmountBorrowed;
         uint _borrowingRate = borrowingRate.getBorrowingRate();
+        // TODO this is wrong the index should be updated after the interest is calculated. 
         debtToken.recalculateDebtIndex(_borrowingRate);
         uint debtWithInterests = debtTokenAmount * debtToken.getDebtIndex() / DECIMALS; 
         uint interest = debtWithInterests - debtTokenAmount;
@@ -240,6 +245,7 @@ contract Pool is ReentrancyGuard {
      */
     function liquidate(address _borrower) public nonReentrant {
 
+        // TODO actually could be the debt token address for instance ?
         require(_borrower != address(0), "Invalid borrower address");
         uint borrowerDebtInToken = debtToken.balanceOf(_borrower);
         require(borrowerDebtInToken > 0, "The borrower has no debt to liquidate");
@@ -248,9 +254,12 @@ contract Pool is ReentrancyGuard {
         uint collateralPrice = oracleGateway.getCollateralPrice();
         uint healthFactor = getHealthFactor(_borrower, collateralPrice);
         require(healthFactor < 1e18, "The borrower is not liquidatable, because the health factor is safe");
+        // TODO incorrect calculation: division happens before multiplication. 
+        // uint fromTokenToAmountBorrowed = (debtToken.balanceOf(_borrower) * DECIMALS) / debtToken.getDebtIndex();
         uint fromTokenToAmountBorrowed = (debtToken.balanceOf(_borrower) / debtToken.getDebtIndex()) * DECIMALS;
         totalBorrows -= fromTokenToAmountBorrowed;
         uint _borrowingRate = borrowingRate.getBorrowingRate();
+        // TODO this is wrong the index should be updated after the interest is calculated.
         debtToken.recalculateDebtIndex(_borrowingRate);
         uint debtWithInterests = borrowerDebtInToken * debtToken.getDebtIndex() / DECIMALS;
         totalLiquidity += debtWithInterests;

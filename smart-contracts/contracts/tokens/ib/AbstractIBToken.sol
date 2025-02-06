@@ -49,6 +49,7 @@ abstract contract AbstractIBToken is ERC20 {
      * @param amount The amount of IBTokens to mint.
      */
     function mint(address account, uint amount) external {
+        // TODO: The mint() and burn() functions currently do not consider the exchange rate when minting/burning IBTokens. ????
         _mint(account, amount);
     }
 
@@ -62,7 +63,8 @@ abstract contract AbstractIBToken is ERC20 {
     }
 
     /**
-     * @notice Recalculates the IBToken exchange rate based on the provided lending rate and elapsed time.
+     * @notice Recalculates the IBToken exchange rate ,including compounding, based on 
+     * the provided lending rate and elapsed time.
      * @dev The exchange rate is updated to reflect the accrued interest:
      *      New Exchange Rate = Current Exchange Rate × (1 + Interest Accrued)
      *      Interest Accrued = Lending Rate × Time Elapsed / ONE_YEAR
@@ -73,6 +75,7 @@ abstract contract AbstractIBToken is ERC20 {
     function recalculateExchangeRate(uint lendingRate) external returns (uint) {   
         uint timeElapsed = getElapsedTime();
         uint interestAccrued = lendingRate * timeElapsed / ONE_YEAR;
+        // exponential growth
         exchangeRate = (exchangeRate * (DECIMALS + interestAccrued)) / DECIMALS;
         lastUpdateTimestamp = block.timestamp;
         emit ExchangeRateUpdated(exchangeRate);
@@ -117,5 +120,17 @@ abstract contract AbstractIBToken is ERC20 {
             "Interests bearing tokens are non-transferable"
         );
     }
+
+    /** 
+    /**
+     * Lenders can check their real balance in the underlying asset. Improves usability for wallets and UI integrations.
+
+    function balanceOfUnderlying(address account) public view returns (uint) {
+        //notice Returns the equivalent balance of the underlying asset for a given IBToken holder.
+        //param account The address of the IBToken holder.
+     //return The balance in terms of the underlying asset.
+        return (balanceOf(account) * exchangeRate) / DECIMALS;
+    }
+    */ 
 
 }

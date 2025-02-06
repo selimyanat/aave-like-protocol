@@ -30,6 +30,10 @@ abstract contract AbstractDebtToken is ERC20{
     /// @param newDebtIndex The updated value of the debt index.
     event DebtIndexUpdated(uint newDebtIndex);
 
+    // TODO we might need to store the debt index for each borrower at the time they borrowed
+    // Mapping to store the debt index at the time of borrowing for each borrower
+    //mapping(address => uint) public borrowerDebtIndex;
+
 
     /**
      * @notice Constructor to initialize the debt token.
@@ -38,6 +42,7 @@ abstract contract AbstractDebtToken is ERC20{
      * @param _debtIndex The initial value of the debt index.
      */
     constructor(string memory name, string memory symbol, uint _debtIndex) ERC20(name, symbol) {
+        // TODO should start at 1e18 and increase over time as interest accrues
         initialDebtIndex = _debtIndex;
         debtIndex = _debtIndex;
         lastUpdateTimestamp = block.timestamp;
@@ -49,6 +54,14 @@ abstract contract AbstractDebtToken is ERC20{
      * @param amount The amount of debt tokens to mint.
      */    
     function mint(address borrower, uint amount) external {
+
+        /*
+        if (balanceOf(borrower) == 0) {
+            // Store the borrower's debt index at borrowing time (only if they have no debt)
+            borrowerDebtIndex[borrower] = debtIndex;
+        }
+        _mint(borrower, amount);
+        */
         _mint(borrower, amount);
     }
 
@@ -70,6 +83,11 @@ abstract contract AbstractDebtToken is ERC20{
      */
     function recalculateDebtIndex(uint borrowingRate) external returns (uint) {
         uint timeElapsed = getElapsedTime();
+        // The debt index (debtIndex) is NOT the APR, but rather a cumulative tracker of interest accrual over time.do
+        // TODO fix the interestAccrued calculation, it should be linear not exponential
+        // uint interestAccrued = (borrowingRate * timeElapsed * debtIndex) / (DECIMALS * ONE_YEAR);
+        // linear growth
+        // debtIndex = debtIndex + interestAccrued;
         uint interestAccrued = (borrowingRate * timeElapsed) / ONE_YEAR;
         debtIndex = (debtIndex * (DECIMALS + interestAccrued)) / DECIMALS;
         lastUpdateTimestamp = block.timestamp;
@@ -83,6 +101,7 @@ abstract contract AbstractDebtToken is ERC20{
      * @return The total debt accrued as a `uint`.
      */
     function getTotalDebtAccrued(address user) public view returns (uint) {
+        // TODO review this implementation it seems to be incorrect
         return balanceOf(user);
     } 
 
@@ -124,4 +143,17 @@ abstract contract AbstractDebtToken is ERC20{
             "Debt tokens are non-transferable"
         );
     }
+
+        /** 
+    /**
+     * Borrower can check their real balance in the underlying asset. Improves usability for wallets and UI integrations.
+
+    function balanceOfUnderlying(address account) public view returns (uint) {
+        //notice Returns the equivalent balance of the underlying asset for a given IBToken holder.
+        //param account The address of the Debt token holder.
+     //return The balance in terms of the underlying asset.
+      // is the formula correct ???
+        return (balanceOf(account) * debtIndex) / DECIMALS;
+    }
+    */ 
 }
