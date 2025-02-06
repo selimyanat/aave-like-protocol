@@ -8,7 +8,6 @@
 
 Sure! Here is the equivalent diagram using Mermaid syntax:
 
-```markdown
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#ffcc00', 'edgeLabelBackground':'#ffffff', 'tertiaryColor': '#ffffff'}}}%%
 graph TD
@@ -58,10 +57,11 @@ graph TD
 
     oracle[Oracle] --> UC14
 ```
+
+
 ```
-
 This Mermaid diagram should render correctly on GitHub and visually represent the same structure as your original PlantUML diagram.
-
+```
 
 
 
