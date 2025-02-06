@@ -22,7 +22,11 @@ on key concepts and provide you with a solid fundamentals. So without further ad
 
 📈 [Mitigating Collateral Price Fluctuations: Understanding Liquidation](docs/liquidation.md)
 
+📜 [Smart Contracts for a Aave-like protocol](./smart-contracts/README.md) 
+
 📘 [References](docs/references.md)
+
+
 
 > [!WARNING]  
 > DISCLAIMER: I am not a DeFi expert / guru. Like you, I sought to better understand the concepts by getting my hands dirty. :)

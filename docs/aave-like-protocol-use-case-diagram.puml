@@ -1,10 +1,9 @@
- ```plantuml
-@startuml
+ @startuml
 
 left to right direction
 skinparam packageStyle rectangle
 
-title Lending protocol use-case diagram
+title Aave-like Protocol
 
 actor lender
 actor borrower
@@ -59,4 +58,3 @@ UC12 --> UC13
 oracle --> UC14
 
 @enduml
- ```
