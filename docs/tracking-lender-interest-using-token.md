@@ -26,7 +26,7 @@ impacts the utilization rate, such as a new deposit, repayment, or liquidation.
 ### Exchange Rate Formula (Exponential APY Growth)
 
 <pre>
-New Exchange Rate = Current Exchange Rate + (1 + Interest Accrued)
+New Exchange Rate = Current Exchange Rate X (1 + Interest Accrued)
 </pre>
 
 <pre>
@@ -48,18 +48,26 @@ Total amount earned = Deposit amount × Current Exchange Rate / Exchange Rate a
 
 ### Example: Exchnage Rate In Action
 
-* Starting Exchange Rate = 100%
-* Suppose a fixed Lending APY = 10% to facilitate the explanation
-* Alice deposits 1000 USDC, the exhange rate is equal to 100%
-* After a year, the exchange rate index is equal now to 110%
-* Alice's total balance is: 1000 USDC * (1.1/1) = 1100 USDC
+#### Initial Setup
+* **Starting Exchange Rate**: 100%
+* **Fixed Lending APY**: 10% (for simplicity)
 
-* Later ...
+#### Alice makes a deposit
+* **Alice deposits 1000 USDC**
+    * Initial Exchange Rate: 100%
+    * After a year, the Exchange rate increases to 110.5% (10% APY)
+    * **Alice's total balance** is: <pre> 1000 USDC * (1.105/1) = 1105 USDC </pre> 
 
-* Bob deposits 1000 USDC, the exchange rate is equal to 110%
-* After a year, the exchange rate index is equal now to 121%
-* Bob's total balance is: 1000 USDC * (1.21/1.1) = 1100 USDC
+> [!NOTE]
+> Alice earns **compounded** interest, bringing her total to 1,105 USDC.
 
+
+#### Bob makes a deposit
+
+* **Bob deposits 1000 USDC**
+    * Initial Exchange Rate: 110.5%
+    * After a year, the Exchange rate increases to 122.1% (10% APY)
+    * **Bob's total balance** is: <pre> 1000 USDC * (1.221/1.105) = 1100 USDC </pre> 
 
 > [!NOTE]  
 > Bob earns the same interest (10%) as Alice for his deposit duration, even though he 

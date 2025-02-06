@@ -1,7 +1,7 @@
 # Why Is A Collateral Needed ?
 
 To understand the rationale behind the collateral mechanism in DeFi, let's draw a parallel 
-with its counterpart in TradFi: the credit score.
+with its counterpart in `TradFi`: the credit score.
 
 ## The Credit Score in TradFi
 
@@ -19,7 +19,7 @@ by the borrower's financial history, which includes information like:
 ## The DeFi Approach
 
 In contrast, preserving anonymity and personal identities are fundamental to blockchain. 
-Therefore, DeFi lending protocols do not rely on these traditional mechanisms to determine 
+Therefore, `DeFi` lending protocols do not rely on these traditional mechanisms to determine 
 creditworthiness. Instead, they address the challenge by requiring collateral—an amount of an 
 asset that is worth significantly more than the loan itself.
 

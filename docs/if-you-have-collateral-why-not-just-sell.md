@@ -16,7 +16,7 @@ stable coins such as `USDC` to use for trading or real world expenses.
 use the borrowed money to buy more `ETH`. Later, the price of `ETH` increases, allowing you 
 to realize a profit from your loan. You sell the gained `ETH` to repay the loan and the 
 interest, keeping the remaining profit. You end up with your original `10 ETH` plus the 
-additional gains. - put it simply: leveraged speculation
+additional gains. - leveraged speculation
 
 
 
