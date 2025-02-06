@@ -23,8 +23,13 @@ impacts the utilization rate, such as a new deposit, repayment, or liquidation.
 
 ### Debt Index Formula (Linear APR Growth)
 
-* New Debt Index = Current Debt Index + Interest accrue
-* Interest accrues = Borrowing Rate X Time Elapsed X Debt index / ONE_YEAR;
+<pre>
+New Debt Index = Current Debt Index + Interest accrue
+</pre>
+
+<pre>
+Interest accrues = Borrowing Rate X Time Elapsed X Debt index / ONE_YEAR
+</pre>
 
 ### Why This Works ?
 
@@ -35,7 +40,9 @@ impacts the utilization rate, such as a new deposit, repayment, or liquidation.
 To determine how much a borrower owes at any point in time, we use the debt index to scale 
 their initial borrowed amount:
 
-* Total Debt Owed = Borrowed Amount × Current Debt Index / Debt Index at Borrowing
+<pre>
+Total Debt Owed = Borrowed Amount × Current Debt Index / Debt Index at Borrowing
+</pre>
 
 ### Example: Debt Index In Action
 
@@ -51,4 +58,6 @@ their initial borrowed amount:
 * After a year, the debt index is equal now to 121%
 * Bob's total debt is: 1000 USDC * (1.21/1.1) = 1100 USDC
 
-Bob pays the same interest (10%) as Alice for his loan duration, even though he borrowed later.
+> [!NOTE]  
+> Bob pays the same interest (10%) as Alice for his loan duration, even though he borrowed 
+> later.

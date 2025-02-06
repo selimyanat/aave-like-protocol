@@ -25,8 +25,13 @@ impacts the utilization rate, such as a new deposit, repayment, or liquidation.
 
 ### Exchange Rate Formula (Exponential APY Growth)
 
-* New Exchange Rate = Current Exchange Rate + (1 + Interest Accrued)
-* Interest Accrued = Lending Rate × Time Elapsed / ONE_YEAR
+<pre>
+New Exchange Rate = Current Exchange Rate + (1 + Interest Accrued)
+</pre>
+
+<pre>
+Interest Accrued = Lending Rate × Time Elapsed / ONE_YEAR
+</pre>
 
 ### Why this works
 
@@ -37,7 +42,9 @@ impacts the utilization rate, such as a new deposit, repayment, or liquidation.
 To determine how much a lender owes at any point in time, we use the exchange rate to scale 
 their initial deposit amount:
 
-* Total amount earned = Deposit amount × Current Exchange Rate / Exchange Rate at Lending
+<pre>
+Total amount earned = Deposit amount × Current Exchange Rate / Exchange Rate at Lending
+</pre>
 
 ### Example: Exchnage Rate In Action
 
@@ -53,4 +60,7 @@ their initial deposit amount:
 * After a year, the exchange rate index is equal now to 121%
 * Bob's total balance is: 1000 USDC * (1.21/1.1) = 1100 USDC
 
-Bob earns the same interest (10%) as Alice for his deposit duration, even though he deposited later.
+
+> [!NOTE]  
+> Bob earns the same interest (10%) as Alice for his deposit duration, even though he 
+> deposited later.

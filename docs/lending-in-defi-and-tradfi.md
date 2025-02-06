@@ -3,7 +3,7 @@
 
 > [!NOTE]  
 > The following will not provde an exhaustive comparison between lending in DeFi and TradFi as this topic has been
-> extensively covered in numerous article and posts, some of which are >referenced in the appendx section. Instead 
+> extensively covered in numerous article and posts, some of which are referenced in the references section. Instead 
 > the focus here is on the main structure and mechansims that differentiate these protocols. 
 
 Unlike TradeFi, which relies on centralized intermediaries and order books that match individual buy and sell orders. 

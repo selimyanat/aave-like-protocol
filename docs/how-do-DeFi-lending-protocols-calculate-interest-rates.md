@@ -44,7 +44,6 @@ larger amount. Here's an example to illustrate that:
 * In the next 6 months, you earn another 5% but the interest rate is calculated on $105 
 turning the initial investiment into $110.25. The extra $0.25 comes from compounding.
 
-
 > [!WARNING]  
 > When a protocol advertises an APY of 10%, it is reflecting the current rate at that specific
 > moment unless it was specified as a fixed and stable rate.
