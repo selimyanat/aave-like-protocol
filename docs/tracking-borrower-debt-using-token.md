@@ -46,18 +46,18 @@ Total Debt Owed = Borrowed Amount × Current Debt Index / Debt Index at 
 
 ### Example: Debt Index In Action
 
-#### Initial Setup
+#### ⚙️ Initial Setup
 * **Starting Debt Index**: 100%
 * **Fixed Borrowing APR**: 10% (for simplicity)
 
-#### Alice takes a loan
+#### 🙇‍♀️ Alice takes a loan
 
 * **Alice borrows 1000 USDC**: 
     * Initial Debt Index: 100%
     * After 1 year, the Debt Index increases to 110%  (10% APR)
     * **Alice's total debt** is: <pre> 1000 USDC * (1.1/1) = 1100 USDC </pre>
 
-#### Bob takes a loan 
+#### 🙇‍♂️ Bob takes a loan 
 
 *  **Bob borrows 1000 USDC**:
     * Initial Debt Index: 110%
