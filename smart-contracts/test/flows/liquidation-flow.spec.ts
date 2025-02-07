@@ -66,8 +66,8 @@ describe("Liquidation flow", function() {
             // decrease the collateral value to make the health factor unsafe
             await registry.oracleGateway.updateCollateralPrice(FIVE_HUNDRED)
 
-            const expectedBobDebtToRepayWithInterest = ethers.parseUnits("1016.736420761406433787", DECIMAL_18).toString();
-            const bobDebtTokenBalanceBeforeRepay = ethers.parseUnits("1008.222312328767122000", DECIMAL_18);
+            const expectedBobDebtToRepayWithInterest = ethers.parseUnits("1000.660273972602738000", DECIMAL_18).toString();
+            const bobDebtTokenBalanceBeforeRepay = ethers.parseUnits("1000.219178082191780000", DECIMAL_18);
 
             const txResponse = await actors.gregTheLiquidator.liquidate(actors.bobTheBorrower.getAddress(), expectedBobDebtToRepayWithInterest)
             await expect(txResponse)
@@ -78,7 +78,7 @@ describe("Liquidation flow", function() {
                                 expectedBobDebtToRepayWithInterest, // amount of token borrowed with interests
                                 ethers.parseEther("0.1"), // collateral to liquidator
                                 ethers.parseEther("0.9"), // collateral to borrower
-                                ethers.parseUnits("200016.736420761406433787", DECIMAL_18), // total liquidity
+                                ethers.parseUnits("200000.660273972602738000", DECIMAL_18), // total liquidity
                                 ZERO, // total borrowed
                                 ZERO) // utilization rate
                     .to.emit(registry.debtToken, "Transfer")
@@ -90,7 +90,7 @@ describe("Liquidation flow", function() {
                     .to.emit(registry.lendingRate, "LendingRateUpdated")
                             .withArgs(ethers.parseUnits("0.0640", DECIMAL_18))
                     .to.emit(registry.debtToken, "DebtIndexUpdated")
-                            .withArgs(ethers.parseUnits("1.008665702657637012", DECIMAL_18))
+                            .withArgs(ethers.parseUnits("1.000879452054794518", DECIMAL_18))
                     .to.emit(registry.ibToken, "ExchangeRateUpdated")
                             .withArgs(ethers.parseUnits("1.000350715676487144", DECIMAL_18))
 

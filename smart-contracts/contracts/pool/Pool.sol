@@ -209,7 +209,6 @@ contract Pool is ReentrancyGuard {
         uint debtTokenAmount = debtToken.balanceOf(msg.sender);
         require(debtTokenAmount > 0, "The borrower has no debt to repay");
                 
-        //uint fromTokenToAmountBorrowed = debtTokenAmount / debtToken.getDebtIndex() * DECIMALS;
         uint fromTokenToAmountBorrowed = (debtTokenAmount * DECIMALS) / debtToken.getDebtIndexAtBorrowing(msg.sender);
         totalBorrows -= fromTokenToAmountBorrowed;
 
@@ -225,10 +224,7 @@ contract Pool is ReentrancyGuard {
                
         // Make the transfer(s)        
         uint allowance = tradableToken.allowance(msg.sender, address(this));
-        console.log("debtWithInterests", debtWithInterests);
-        console.log("allowance", allowance);
-        console.log("fee", fee);
-        require(debtWithInterests == allowance, "The amount of token allowed to repay the debt is insufficient to cover the debt with the interests");
+        require(debtWithInterests <= allowance, "The amount of token allowed to repay the debt is insufficient to cover the debt with the interests");
         tradableToken.transferFrom(msg.sender, address(this), debtWithInterests);
         tradableToken.approve(address(protocolReserve), fee);        
         protocolReserve.collectTradabelTokenFee(fee);
@@ -262,17 +258,14 @@ contract Pool is ReentrancyGuard {
         uint collateralPrice = oracleGateway.getCollateralPrice();
         uint healthFactor = getHealthFactor(_borrower, collateralPrice);
         require(healthFactor < SAFE_HEALTH_FACTOR, "The borrower is not liquidatable, because the health factor is safe");
-        // TODO incorrect calculation: division happens before multiplication. 
-        // uint fromTokenToAmountBorrowed = (debtToken.balanceOf(_borrower) * DECIMALS) / debtToken.getDebtIndex();
-        //uint fromTokenToAmountBorrowed = (debtToken.balanceOf(_borrower) / debtToken.getDebtIndex()) * DECIMALS;
+
         uint debtTokenAmount = debtToken.balanceOf(_borrower);
         uint fromTokenToAmountBorrowed = (debtTokenAmount * DECIMALS) / debtToken.getDebtIndexAtBorrowing(_borrower);
         totalBorrows -= fromTokenToAmountBorrowed;
-        //uint _borrowingRate = borrowingRate.getBorrowingRate();
-        // TODO this is wrong the index should be updated after the interest is calculated.
-        //debtToken.recalculateDebtIndex(_borrowingRate);
-        uint debtWithInterests = (debtTokenAmount * debtToken.getDebtIndex() * DECIMALS) / debtToken.getDebtIndexAtBorrowing(_borrower); 
-        //uint debtWithInterests = borrowerDebtInToken * debtToken.getDebtIndex() / DECIMALS;
+
+        // Get fresh debt token index, as we only update the debt index when the borrower borrows, repays or get liquidated
+        debtToken.recalculateDebtIndex(borrowingRate.getBorrowingRate()); 
+        uint debtWithInterests = (debtTokenAmount * debtToken.getDebtIndex()) / debtToken.getDebtIndexAtBorrowing(_borrower); 
         totalLiquidity += debtWithInterests;
         uint collateralToSeize = collateralBalances[_borrower]; 
         collateralBalances[_borrower] = 0; 
@@ -280,22 +273,22 @@ contract Pool is ReentrancyGuard {
         uint remainingCollateral = collateralToSeize - liquidationPenalty;
         require(liquidationPenalty <= collateralToSeize, "Insufficient collateral to apply penalty");
 
-        // Udpate the rates
-        uint _utilizationRate = getUtilizationRate();
-        uint _borrowingRate2 = borrowingRate.recalculateBorrowingRate(_utilizationRate);
-        uint _lendingRate2 = lendingRate.recalculateLendingRate(_borrowingRate2);
-        debtToken.recalculateDebtIndex(_borrowingRate2);
-        ibToken.recalculateExchangeRate(_lendingRate2);
-
         // Make the transfer(s)        
         uint allowance = tradableToken.allowance(msg.sender, address(this));
-        require(debtWithInterests == allowance, "The amount of token sent to liquidate the debt is insufficient to cover the debt with the interests");
+        require(debtWithInterests <= allowance, "The amount of token sent to liquidate the debt is insufficient to cover the debt with the interests");
         debtToken.burn(_borrower, borrowerDebtInToken);
         tradableToken.transferFrom(msg.sender, address(this), debtWithInterests);
         payable(msg.sender).transfer(liquidationPenalty);            
         if (remainingCollateral > 0) {
             payable(_borrower).transfer(remainingCollateral);
         }
+
+       // Udpate the rates
+        uint _utilizationRate = getUtilizationRate();
+        uint _borrowingRate2 = borrowingRate.recalculateBorrowingRate(_utilizationRate);
+        uint _lendingRate2 = lendingRate.recalculateLendingRate(_borrowingRate2);
+        debtToken.recalculateDebtIndex(_borrowingRate2);
+        ibToken.recalculateExchangeRate(_lendingRate2);
         emit Liquidation(_borrower, msg.sender, debtWithInterests, liquidationPenalty, remainingCollateral, totalLiquidity, totalBorrows, _utilizationRate);
     }
     
