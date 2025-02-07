@@ -22,6 +22,9 @@ contract Pool is ReentrancyGuard {
     /// @notice Decimal precision used for calculations (1e18).
     uint public constant DECIMALS = 1e18;
 
+    /// @notice The minimum health factor required for a borrower to borrow from the pool.
+    uint public constant SAFE_HEALTH_FACTOR = 1e18;
+
     /// @notice The tradable ERC20 token supported by the pool.
     TradableToken public tradableToken;
 
@@ -136,6 +139,8 @@ contract Pool is ReentrancyGuard {
         uint ibTokenAmount = ibToken.balanceOf(msg.sender);
         require(ibTokenAmount > 0, "No funds to withdraw");
 
+        // TODO: get lending rate and update the exchange rate before
+
         // Calculate the amount to be withdrawn: deposit + interest
         uint _lendingRate = lendingRate.getLendingRate();
         // TODO this is reduncant and not useful given we do it at the end of the function
@@ -176,15 +181,19 @@ contract Pool is ReentrancyGuard {
         totalBorrows += _amount;
         totalLiquidity -= _amount;
         
+        // Make the transfer(s)
+        debtToken.recalculateDebtIndex(borrowingRate.getBorrowingRate());
+        uint debtTokenIndex = debtToken.getDebtIndex();
+        // ensure proper scaling before the division
+        uint debtTokenAmount = (_amount * debtTokenIndex) / DECIMALS; 
+
         // Udpate the rates
         uint _utilizationRate = getUtilizationRate();
         uint _borrowingRate = borrowingRate.recalculateBorrowingRate(_utilizationRate);        
         lendingRate.recalculateLendingRate(_borrowingRate);
-        debtToken.recalculateDebtIndex(_borrowingRate);        
-        
-        // Make the transfer(s)
-        uint debtTokenIndex = debtToken.getDebtIndex();        
-        uint debtTokenAmount = _amount * debtTokenIndex / DECIMALS;
+        debtToken.recalculateDebtIndex(_borrowingRate);   
+
+        //uint debtTokenAmount = _amount * debtTokenIndex / DECIMALS;
         debtToken.mint(msg.sender, debtTokenAmount);        
         tradableToken.transfer(msg.sender, _amount);
         emit Borrowing(msg.sender, _amount, totalLiquidity, totalBorrows, _utilizationRate);
@@ -200,17 +209,18 @@ contract Pool is ReentrancyGuard {
 
         uint debtTokenAmount = debtToken.balanceOf(msg.sender);
         require(debtTokenAmount > 0, "The borrower has no debt to repay");
-
         // Calculate the amount to be repaid: debt + interest + protocol fee
         // TODO: the debt index should be updated after the interest is calculated and use the index at the time of borrowing
         // TODO: uint totalDebtOwed = (borrowerDebt * debtIndex) / borrowerDebtIndexAtBorrowing;
 
-        uint fromTokenToAmountBorrowed = debtTokenAmount / debtToken.getDebtIndex() * DECIMALS;
+        //uint fromTokenToAmountBorrowed = debtTokenAmount / debtToken.getDebtIndex() * DECIMALS;
+        uint fromTokenToAmountBorrowed = (debtTokenAmount * DECIMALS) / debtToken.getDebtIndexAtBorrowing(msg.sender);
         totalBorrows -= fromTokenToAmountBorrowed;
-        uint _borrowingRate = borrowingRate.getBorrowingRate();
         // TODO this is wrong the index should be updated after the interest is calculated. 
-        debtToken.recalculateDebtIndex(_borrowingRate);
-        uint debtWithInterests = debtTokenAmount * debtToken.getDebtIndex() / DECIMALS; 
+        //debtToken.recalculateDebtIndex(_borrowingRate);
+        // TODO can be offloaded to the debt token contract
+        uint debtWithInterests = (debtTokenAmount * debtToken.getDebtIndex() * DECIMALS) / debtToken.getDebtIndexAtBorrowing(msg.sender); 
+        //uint debtWithInterests = debtTokenAmount * debtToken.getDebtIndex() / DECIMALS; 
         uint interest = debtWithInterests - debtTokenAmount;
         uint fee = (interest * lendingRate.reserveFactor()) / DECIMALS;        
         uint netRepayment = debtWithInterests - fee;
@@ -253,15 +263,18 @@ contract Pool is ReentrancyGuard {
         // Calculate the amount to be repaid and incentives for the liquidator
         uint collateralPrice = oracleGateway.getCollateralPrice();
         uint healthFactor = getHealthFactor(_borrower, collateralPrice);
-        require(healthFactor < 1e18, "The borrower is not liquidatable, because the health factor is safe");
+        require(healthFactor < SAFE_HEALTH_FACTOR, "The borrower is not liquidatable, because the health factor is safe");
         // TODO incorrect calculation: division happens before multiplication. 
         // uint fromTokenToAmountBorrowed = (debtToken.balanceOf(_borrower) * DECIMALS) / debtToken.getDebtIndex();
-        uint fromTokenToAmountBorrowed = (debtToken.balanceOf(_borrower) / debtToken.getDebtIndex()) * DECIMALS;
+        //uint fromTokenToAmountBorrowed = (debtToken.balanceOf(_borrower) / debtToken.getDebtIndex()) * DECIMALS;
+        uint debtTokenAmount = debtToken.balanceOf(_borrower);
+        uint fromTokenToAmountBorrowed = (debtTokenAmount * DECIMALS) / debtToken.getDebtIndexAtBorrowing(_borrower);
         totalBorrows -= fromTokenToAmountBorrowed;
-        uint _borrowingRate = borrowingRate.getBorrowingRate();
+        //uint _borrowingRate = borrowingRate.getBorrowingRate();
         // TODO this is wrong the index should be updated after the interest is calculated.
-        debtToken.recalculateDebtIndex(_borrowingRate);
-        uint debtWithInterests = borrowerDebtInToken * debtToken.getDebtIndex() / DECIMALS;
+        //debtToken.recalculateDebtIndex(_borrowingRate);
+        uint debtWithInterests = (debtTokenAmount * debtToken.getDebtIndex() * DECIMALS) / debtToken.getDebtIndexAtBorrowing(_borrower); 
+        //uint debtWithInterests = borrowerDebtInToken * debtToken.getDebtIndex() / DECIMALS;
         totalLiquidity += debtWithInterests;
         uint collateralToSeize = collateralBalances[_borrower]; 
         collateralBalances[_borrower] = 0; 
@@ -315,6 +328,11 @@ contract Pool is ReentrancyGuard {
         uint collateralValue = _collateralPrice * _collateralAmount / DECIMALS;
         uint collateralRatio = (collateralValue * DECIMALS)/ _borrowedAmount;
         return collateralRatio;
+    }
+
+    function updateExchangeRate() public {
+        uint _lendingRate = lendingRate.getLendingRate();
+        ibToken.recalculateExchangeRate(_lendingRate);
     }
 
     /**
