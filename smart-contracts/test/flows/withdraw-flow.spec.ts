@@ -44,8 +44,8 @@ describe("Withdraw flow", function() {
             .to.emit(registry.pool, "FundsWithdrawn")
                 .withArgs(
                     actors.aliceTheLender.getAddress(), // depositor
-                    ethers.parseUnits("212874.632295956463927119", DECIMAL_18), // deposit amount with interests               
-                    ethers.parseUnits("187125.367704043536072881", DECIMAL_18), // total liquidty: initial liquidity - deposit amount with interests
+                    ethers.parseUnits("212911.958258879590400000", DECIMAL_18), // deposit amount with interests               
+                    ethers.parseUnits("187088.041741120409600000", DECIMAL_18), // total liquidty: initial liquidity - deposit amount with interests
                     ZERO.toString(), // total borrows                 
                     ZERO.toString() // utilization rate
             )
@@ -60,7 +60,7 @@ describe("Withdraw flow", function() {
                 .withArgs(actors.aliceTheLender.getAddress(), ZERO_ADDRESS, TWO_HUNDRED_THOUSAND)
                 
             .to.emit(registry.tradableToken, "Transfer")
-                .withArgs(registry.poolAddress, actors.aliceTheLender.getAddress(), ethers.parseUnits("212874.632295956463927119", DECIMAL_18))
+                .withArgs(registry.poolAddress, actors.aliceTheLender.getAddress(), ethers.parseUnits("212911.958258879590400000", DECIMAL_18))
             expect(await registry.debtToken.getDebtIndex())
             .to.be
                 .equal(await registry.debtToken.getInitialDebtIndex(), "The debt token index must be equal to the initial debt index")                

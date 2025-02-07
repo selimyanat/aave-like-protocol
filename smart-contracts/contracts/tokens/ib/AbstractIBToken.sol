@@ -91,7 +91,6 @@ abstract contract AbstractIBToken is ERC20 {
         exchangeRate = (exchangeRate * (DECIMALS + interestAccrued)) / DECIMALS;
         lastUpdateTimestamp = block.timestamp;
         emit ExchangeRateUpdated(exchangeRate);
-        console.log("exchangeRate", exchangeRate);
         return exchangeRate;
     }
 

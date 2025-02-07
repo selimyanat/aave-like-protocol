@@ -58,7 +58,7 @@ describe("Liquidation flow", function() {
             
             await expect(actors.gregTheLiquidator.liquidate(actors.bobTheBorrower.getAddress(), ONE_THOUSAND.toString()))
             .to.be
-                .revertedWith("The amount of token sent to liquidate the debt is insufficient to cover the debt with the interests")
+                .revertedWith("The amount of token to repay the debt must be equal to borrowed amount including the interests")
         })
 
         it ("Accepts the Liquidation if the amount of token covers the borrowed amount with interests", async function () {

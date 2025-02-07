@@ -224,7 +224,7 @@ contract Pool is ReentrancyGuard {
                
         // Make the transfer(s)        
         uint allowance = tradableToken.allowance(msg.sender, address(this));
-        require(debtWithInterests <= allowance, "The amount of token allowed to repay the debt is insufficient to cover the debt with the interests");
+        require(debtWithInterests == allowance, "The amount of token to repay the debt must be equal to borrowed amount including the interests");
         tradableToken.transferFrom(msg.sender, address(this), debtWithInterests);
         tradableToken.approve(address(protocolReserve), fee);        
         protocolReserve.collectTradabelTokenFee(fee);
@@ -275,7 +275,7 @@ contract Pool is ReentrancyGuard {
 
         // Make the transfer(s)        
         uint allowance = tradableToken.allowance(msg.sender, address(this));
-        require(debtWithInterests <= allowance, "The amount of token sent to liquidate the debt is insufficient to cover the debt with the interests");
+        require(debtWithInterests == allowance, "The amount of token to repay the debt must be equal to borrowed amount including the interests");
         debtToken.burn(_borrower, borrowerDebtInToken);
         tradableToken.transferFrom(msg.sender, address(this), debtWithInterests);
         payable(msg.sender).transfer(liquidationPenalty);            
@@ -321,10 +321,6 @@ contract Pool is ReentrancyGuard {
         return collateralRatio;
     }
 
-    function updateExchangeRate() public {
-        uint _lendingRate = lendingRate.getLendingRate();
-        ibToken.recalculateExchangeRate(_lendingRate);
-    }
 
     /**
      * @notice Calculates the borrower’s health factor based on their collateral and debt.

@@ -40,7 +40,7 @@ describe("Repay flow", function() {
 
             await expect(actors.bobTheBorrower.repayAll(ONE_HUNDRED_THOUSAND.toString(), ONE_YEAR))
             .to.be
-                .revertedWith("The amount of token allowed to repay the debt is insufficient to cover the debt with the interests")
+                .revertedWith("The amount of token to repay the debt must be equal to borrowed amount including the interests")
         })
 
         it ('Accepts the repay if the amount of token is equal to the borrowed amount with interests', async function() {

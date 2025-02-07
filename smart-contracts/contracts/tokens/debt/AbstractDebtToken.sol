@@ -88,7 +88,6 @@ abstract contract AbstractDebtToken is ERC20{
         debtIndex = debtIndex + interestAccrued;
         lastUpdateTimestamp = block.timestamp;
         emit DebtIndexUpdated(debtIndex);
-        console.log("Debt Index Updated: %s", debtIndex);
         return debtIndex;
     }
 
