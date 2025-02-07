@@ -21,8 +21,6 @@ describe("Deposit flow", function() {
         
         await actors.tradableTokenFoundation.airDrop(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND.toString());
         await actors.tradableTokenFoundation.airDrop(actors.gregTheLiquidator.getAddress(), FOUR_HUNDRED_THOUSAND.toString());
-        //await actors.charlesTheProtocolAdmin.transferTradableTokensTo(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND.toString());        
-        //await actors.charlesTheProtocolAdmin.transferTradableTokensTo(actors.gregTheLiquidator.getAddress(), FOUR_HUNDRED_THOUSAND.toString());
         
         blokchainStateId = await BlockchainUtils.saveState()
     })

@@ -47,8 +47,8 @@ describe("Repay flow", function() {
 
             await actors.tradableTokenFoundation.airDrop(actors.bobTheBorrower.getAddress(), TWO_THOUSAND.toString());
 
-            const expectedBobDebtToRepayWithInterest = ethers.parseUnits("1098.341465679310105694", DECIMAL_18).toString();
-            const expectedNetDebtPaymentAfterFee = ethers.parseUnits("1080.317635009201508956", DECIMAL_18).toString();
+            const expectedBobDebtToRepayWithInterest = ethers.parseUnits("1080.939726027397259000", DECIMAL_18).toString();
+            const expectedNetDebtPaymentAfterFee = ethers.parseUnits("1064.795616438356163200", DECIMAL_18).toString();
             const bobDebtTokenBalanceBeforeRepay = await actors.bobTheBorrower.getDebtTokenBalance();
 
             const txResponse = await actors.bobTheBorrower.repayAll(expectedBobDebtToRepayWithInterest, ONE_YEAR);
@@ -58,10 +58,9 @@ describe("Repay flow", function() {
                             actors.bobTheBorrower.getAddress(),  // borrower
                             expectedNetDebtPaymentAfterFee,  // amount of token borrowed with interests
                             ONE, // collateral
-                            ethers.parseUnits("200080.317635009201508956", DECIMAL_18), // total liquidity
+                            ethers.parseUnits("200064.795616438356163200", DECIMAL_18), // total liquidity
                             ZERO, // total borrowed
-                            ZERO) // utilization rate
-                        
+                            ZERO) // utilization rate                  
                 .to.emit(registry.debtToken, "Transfer")    
                     .withArgs(actors.bobTheBorrower.getAddress(), ZERO_ADDRESS, bobDebtTokenBalanceBeforeRepay)
                 .to.emit(registry.tradableToken, "Transfer")
@@ -69,29 +68,29 @@ describe("Repay flow", function() {
                 .to.emit(registry.borrowingRate, "BorrowingRateUpdated")
                     .withArgs(ethers.parseUnits("0.080000000000000000", DECIMAL_18))
                 .to.emit(registry.lendingRate, "LendingRateUpdated")
-                    .withArgs(ethers.parseUnits("0.0640", DECIMAL_18))
+                    .withArgs(ethers.parseUnits("0.0640", DECIMAL_18))                                        
                 .to.emit(registry.debtToken, "DebtIndexUpdated")
-                    .withArgs(ethers.parseUnits("1.176534945148931505", DECIMAL_18))
-                .to.emit(registry.ibToken, "ExchangeRateUpdated")                
+                    .withArgs(ethers.parseUnits("1.160939726027397259", DECIMAL_18))                    
+                .to.emit(registry.ibToken, "ExchangeRateUpdated")
+                    .withArgs(ethers.parseUnits("1.064186564383561643", DECIMAL_18))                
                 .to.emit(registry.protocolReserve, "TradableTokenFeeCollected")
                     .withArgs(
                         registry.poolAddress, // pool
-                        ethers.parseUnits("18.023830670108596738", DECIMAL_18)) // fee
+                        ethers.parseUnits("16.144109589041095800", DECIMAL_18)) // fee
                 .to.emit(registry.tradableToken, "Transfer")
                     .withArgs(registry.poolAddress, 
                         registry.protocolReserveAddress, 
-                        ethers.parseUnits("18.023830670108596738", DECIMAL_18))
-                
+                        ethers.parseUnits("16.144109589041095800", DECIMAL_18))
+                                                            
                 // Check the balances in this statement do not merge with the previous one, it acts weirdly ignoring the previous statements
                 await expect(txResponse).to.changeEtherBalance(actors.bobTheBorrower.getAddress(), ethers.parseEther("1"))
 
                 // Charles now wants to get the fee from the protocol reserve
-                await expect(actors.charlesTheProtocolAdmin.sendFundsFromReserve(actors.charlesTheProtocolAdmin.getAddress(), ethers.parseUnits("18.023830670108596738", DECIMAL_18).toString() ))
+                await expect(actors.charlesTheProtocolAdmin.sendFundsFromReserve(actors.charlesTheProtocolAdmin.getAddress(), ethers.parseUnits("16.144109589041095800", DECIMAL_18).toString() ))
                     .to.emit(registry.protocolReserve, "TradableTokenWithdrawn")
-                        .withArgs(actors.charlesTheProtocolAdmin.getAddress(), ethers.parseUnits("18.023830670108596738", DECIMAL_18))
+                        .withArgs(actors.charlesTheProtocolAdmin.getAddress(), ethers.parseUnits("16.144109589041095800", DECIMAL_18))
                     .to.emit(registry.tradableToken, "Transfer")
-                        .withArgs(registry.protocolReserveAddress, actors.charlesTheProtocolAdmin.getAddress(), ethers.parseUnits("18.023830670108596738", DECIMAL_18))   
-                        
+                        .withArgs(registry.protocolReserveAddress, actors.charlesTheProtocolAdmin.getAddress(), ethers.parseUnits("16.144109589041095800", DECIMAL_18)) 
                         
         })
 

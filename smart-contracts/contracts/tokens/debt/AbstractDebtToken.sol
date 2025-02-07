@@ -21,7 +21,7 @@ abstract contract AbstractDebtToken is ERC20{
     uint public debtIndex;
 
     /// @notice Mapping to store the debt index at the time of borrowing for each borrower.
-    mapping(address => uint) public borrowerDebtIndex;
+     mapping(address => uint) public borrowerDebtIndex;
 
     /// @notice The initial debt index value set during contract deployment.
     uint public initialDebtIndex;
@@ -87,8 +87,8 @@ abstract contract AbstractDebtToken is ERC20{
         uint interestAccrued = (borrowingRate * timeElapsed) / ONE_YEAR;
         debtIndex = debtIndex + interestAccrued;
         lastUpdateTimestamp = block.timestamp;
-        console.log("Debt Index Updated: %s", debtIndex);
         emit DebtIndexUpdated(debtIndex);
+        console.log("Debt Index Updated: %s", debtIndex);
         return debtIndex;
     }
 
