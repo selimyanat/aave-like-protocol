@@ -4,6 +4,8 @@
     <img src="docs/aave-like-application-banner.jpeg" alt="Aave like application" style="width: 500px; height: 150px;">
 </div>
 
+![alt text for screen readers](docs/aave-like-application-banner.jpeg).
+
 The DeFi space offers alternatives to every aspect of financial services, including insurance, trading, loans, and savings. 
 This repository explores the concept of loan through the implementation of a lending protocol similar to AAVE. The intent 
 is not to compete with established protocols but to demonstrate the main mechanisms involved in such a protocol. 
