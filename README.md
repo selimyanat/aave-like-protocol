@@ -1,7 +1,7 @@
 # AAVE like application
 
 <div align="center">
-    <img src="docs/aave-like-application-banner.jpeg" alt="Aave like application" style="width: 500px; height: 150px;">
+    <img src="docs/aave-like-application-banner.jpeg" alt="Aave like application" width="80%">
 </div>
 
 ![alt text for screen readers](docs/aave-like-application-banner.jpeg).
