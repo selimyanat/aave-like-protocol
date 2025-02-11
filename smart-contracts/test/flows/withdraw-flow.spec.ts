@@ -31,7 +31,7 @@ describe("Withdraw flow", function() {
         await TestActorsRegistry.resetInstance();
     })
 
-    describe("When Alice withdraw her tradable tokens", async function(){
+    describe("When Alice withdraw her tradable tokens", async function() {
 
         it ("Returns to Alice her initial deposit plus interests earned after a year", async function () {
             

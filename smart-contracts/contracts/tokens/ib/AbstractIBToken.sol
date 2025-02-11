@@ -86,9 +86,9 @@ abstract contract AbstractIBToken is ERC20 {
      */
     function recalculateExchangeRate(uint lendingRate) external returns (uint) {   
         uint timeElapsed = getElapsedTime();
-        uint interestAccrued = lendingRate * timeElapsed / ONE_YEAR;
+        uint accruedInterest = lendingRate * timeElapsed / ONE_YEAR;
         // exponential growth
-        exchangeRate = (exchangeRate * (DECIMALS + interestAccrued)) / DECIMALS;
+        exchangeRate = (exchangeRate * (DECIMALS + accruedInterest)) / DECIMALS;
         lastUpdateTimestamp = block.timestamp;
         emit ExchangeRateUpdated(exchangeRate);
         return exchangeRate;
