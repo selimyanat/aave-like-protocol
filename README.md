@@ -1,7 +1,7 @@
 # AAVE like application
 
 <div align="center">
-    <img src="docs/aave-like-application-banner.jpeg" alt="Aave like application" width="80%">
+    <img src="docs/aave-like-application-banner.jpeg" alt="Aave like application">
 </div>
 
 The DeFi space offers alternatives to every aspect of financial services, including insurance, trading, loans, and savings. 
