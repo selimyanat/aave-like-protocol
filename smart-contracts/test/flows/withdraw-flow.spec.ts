@@ -1,9 +1,9 @@
 
 import { expect } from "chai";
-import hre, { ethers } from "hardhat";
 import ContractRegistry from "../contracts/ContractRegistry";
 import TestActorsRegistry from "../actors/TestActorsRegistry";
-import {TWO_HUNDRED_THOUSAND,FOUR_HUNDRED_THOUSAND, ZERO, ZERO_ADDRESS, DECIMAL_18, ONE_HUNDRED_THOUSAND, ONE_DAY, ONE_YEAR,} from "../utils/Constants";
+import {ZERO_ADDRESS, ONE_DAY, ONE_YEAR,} from "../utils/Constants";
+import ScaledAmount, {TWO_HUNDRED_THOUSAND, ZERO} from "../utils/ScaledAmount";
 import BlockchainUtils from "../utils/BlockchainUtils";
 
 
@@ -21,7 +21,6 @@ describe("Withdraw flow", function() {
         actors = await TestActorsRegistry.getInstance();
         
         await actors.tradableTokenFoundation.airDrop(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND.toString());
-        //await actors.charlesTheProtocolAdmin.transferTradableTokensTo(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND.toString());
         
         blokchainStateId = await BlockchainUtils.saveState()
     })
@@ -32,45 +31,42 @@ describe("Withdraw flow", function() {
         await TestActorsRegistry.resetInstance();
     })
 
-    describe("When Alice withdraw her tradable tokens", async function(){
+    describe("When Alice withdraw her tradable tokens", async function() {
 
         it ("Returns to Alice her initial deposit plus interests earned after a year", async function () {
             
             await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND.toString());
             // simulate another deposit so that we can pay back the alice's deposit with interests
-            //await actors.charlesTheProtocolAdmin.transferTradableTokensTo(actors.vitoTheLender.getAddress(), TWO_HUNDRED_THOUSAND.toString());
-            await actors.tradableTokenFoundation.airDrop(actors.vitoTheLender.getAddress(), TWO_HUNDRED_THOUSAND.toString());
-
-            await actors.vitoTheLender.deposit(TWO_HUNDRED_THOUSAND.toString(), ONE_DAY);
+            await actors.tradableTokenFoundation.airDrop(actors.vitoTheLender.getAddress(), TWO_HUNDRED_THOUSAND);
+            await actors.vitoTheLender.deposit(TWO_HUNDRED_THOUSAND, ONE_DAY);
 
             await expect(actors.aliceTheLender.withdrawAll(ONE_YEAR))
             .to.emit(registry.pool, "FundsWithdrawn")
                 .withArgs(
                     actors.aliceTheLender.getAddress(), // depositor
-                    ethers.parseUnits("212874.632295956464200000", DECIMAL_18), // deposit amount with interests               
-                    ethers.parseUnits("187125.367704043535800000", DECIMAL_18), // total liquidty: initial liquidity - deposit amount with interests
+                    ScaledAmount.of("212911.958258879590400000").value(), // deposit amount with interests
+                    ScaledAmount.of("187088.041741120409600000").value(), // total liquidty: initial liquidity - deposit amount with interests
                     ZERO.toString(), // total borrows                 
                     ZERO.toString() // utilization rate
             )
             .to.emit(registry.borrowingRate, "BorrowingRateUpdated")
                 .withArgs(await registry.borrowingRate.getBaseBorrowingRate())
             .to.emit(registry.lendingRate, "LendingRateUpdated")
-                .withArgs(ethers.parseUnits("0.064", DECIMAL_18))
+                .withArgs(ScaledAmount.of("0.064").value())
             .to.emit(registry.ibToken, "ExchangeRateUpdated")
-                .withArgs(ethers.parseUnits("1.064373161479782321", DECIMAL_18))
+                .withArgs(ScaledAmount.of("1.132691617937239420").value())                                
             .to.emit(registry.ibToken, "Transfer")
-                .withArgs(actors.aliceTheLender.getAddress(), ZERO_ADDRESS, TWO_HUNDRED_THOUSAND)
+                .withArgs(actors.aliceTheLender.getAddress(), ZERO_ADDRESS, TWO_HUNDRED_THOUSAND)                
             .to.emit(registry.tradableToken, "Transfer")
-                .withArgs(registry.poolAddress, actors.aliceTheLender.getAddress(), ethers.parseUnits("212874.632295956464200000", DECIMAL_18))
-            
+                .withArgs(registry.poolAddress, actors.aliceTheLender.getAddress(), ScaledAmount.of("212911.958258879590400000").value())
             expect(await registry.debtToken.getDebtIndex())
             .to.be
-                .equal(await registry.debtToken.getInitialDebtIndex(), "The debt token index must be equal to the initial debt index")
+                .equal(await registry.debtToken.getInitialDebtIndex(), "The debt token index must be equal to the initial debt index")                
         })
 
         it ("Refuses the withdrawal to Alice if there is not enough funds to cover the withdrawal", async function () {
 
-            await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND.toString());
+            await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND);
 
             await expect(actors.aliceTheLender.withdrawAll(ONE_YEAR))
             .to.be

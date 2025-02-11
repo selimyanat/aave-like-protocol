@@ -20,6 +20,9 @@ abstract contract AbstractDebtToken is ERC20{
     /// @notice Current debt index, which tracks cumulative interest accrued over time.
     uint public debtIndex;
 
+    /// @notice Mapping to store the debt index at the time of borrowing for each borrower.
+     mapping(address => uint) public borrowerDebtIndex;
+
     /// @notice The initial debt index value set during contract deployment.
     uint public initialDebtIndex;
 
@@ -29,10 +32,6 @@ abstract contract AbstractDebtToken is ERC20{
     /// @dev Emitted when the debt index is updated.
     /// @param newDebtIndex The updated value of the debt index.
     event DebtIndexUpdated(uint newDebtIndex);
-
-    // TODO we might need to store the debt index for each borrower at the time they borrowed
-    // Mapping to store the debt index at the time of borrowing for each borrower
-    //mapping(address => uint) public borrowerDebtIndex;
 
 
     /**
@@ -55,13 +54,13 @@ abstract contract AbstractDebtToken is ERC20{
      */    
     function mint(address borrower, uint amount) external {
 
-        /*
         if (balanceOf(borrower) == 0) {
-            // Store the borrower's debt index at borrowing time (only if they have no debt)
+            // Store the borrower's debt index at borrowing time
             borrowerDebtIndex[borrower] = debtIndex;
-        }
-        _mint(borrower, amount);
-        */
+        } 
+        // TODO: when a borrower takes a second load we need to update borrower's debt index
+        // using weighted average formula. This ensures fair interest accrual for multiple 
+        // loans.
         _mint(borrower, amount);
     }
 
@@ -71,6 +70,8 @@ abstract contract AbstractDebtToken is ERC20{
      * @param amount The amount of debt tokens to burn.
      */
     function burn(address borrower, uint amount) external {
+        // Reset the borrower's debt index when their debt is fully repaid
+        borrowerDebtIndex[borrower] = 0;
         _burn(borrower, amount);
     }
 
@@ -83,27 +84,12 @@ abstract contract AbstractDebtToken is ERC20{
      */
     function recalculateDebtIndex(uint borrowingRate) external returns (uint) {
         uint timeElapsed = getElapsedTime();
-        // The debt index (debtIndex) is NOT the APR, but rather a cumulative tracker of interest accrual over time.do
-        // TODO fix the interestAccrued calculation, it should be linear not exponential
-        // uint interestAccrued = (borrowingRate * timeElapsed * debtIndex) / (DECIMALS * ONE_YEAR);
-        // linear growth
-        // debtIndex = debtIndex + interestAccrued;
-        uint interestAccrued = (borrowingRate * timeElapsed) / ONE_YEAR;
-        debtIndex = (debtIndex * (DECIMALS + interestAccrued)) / DECIMALS;
+        uint accruedInterest = (borrowingRate * timeElapsed) / ONE_YEAR;
+        debtIndex = debtIndex + accruedInterest;
         lastUpdateTimestamp = block.timestamp;
         emit DebtIndexUpdated(debtIndex);
         return debtIndex;
     }
-
-    /**
-     * @notice Retrieves the total debt accrued by a user in terms of debt tokens.
-     * @param user The address of the user.
-     * @return The total debt accrued as a `uint`.
-     */
-    function getTotalDebtAccrued(address user) public view returns (uint) {
-        // TODO review this implementation it seems to be incorrect
-        return balanceOf(user);
-    } 
 
     /**
      * @notice Retrieves the current debt index.
@@ -144,16 +130,22 @@ abstract contract AbstractDebtToken is ERC20{
         );
     }
 
-        /** 
     /**
-     * Borrower can check their real balance in the underlying asset. Improves usability for wallets and UI integrations.
+     * @dev Retrieves the debt index at the time of borrowing for a specific borrower.
+     * @param borrower The address of the borrower.
+     * @return The debt index at the time of borrowing for the specified borrower.
+     */
+    function getDebtIndexAtBorrowing(address borrower) public view returns (uint) {
+        return borrowerDebtIndex[borrower];
+    }
 
+    /**
+     * @dev Retrieves the balance of a user in terms of the underlying asset.
+     * @param account The address of the Debt token holder.
+     * @return The balance of the user in terms of the underlying asset.
+     */
     function balanceOfUnderlying(address account) public view returns (uint) {
-        //notice Returns the equivalent balance of the underlying asset for a given IBToken holder.
-        //param account The address of the Debt token holder.
-     //return The balance in terms of the underlying asset.
-      // is the formula correct ???
+
         return (balanceOf(account) * debtIndex) / DECIMALS;
     }
-    */ 
 }

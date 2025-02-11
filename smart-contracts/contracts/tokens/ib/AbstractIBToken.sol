@@ -21,6 +21,9 @@ abstract contract AbstractIBToken is ERC20 {
     /// @dev Reflects the accrued interest and pool growth.
     uint public exchangeRate;
 
+    /// @notice Mapping to store the lender exchange rate at the time of deposit for each lender.
+     mapping(address => uint) public lenderExchangeRate;
+
     /// @notice Initial exchange rate set during contract deployment.
     uint public initialExchangeRate;
 
@@ -45,21 +48,30 @@ abstract contract AbstractIBToken is ERC20 {
 
     /**
      * @notice Mints IBTokens to a specified account.
-     * @param account The address of the account to receive the tokens.
+     * @param lender The address of the account to receive the tokens.
      * @param amount The amount of IBTokens to mint.
      */
-    function mint(address account, uint amount) external {
-        // TODO: The mint() and burn() functions currently do not consider the exchange rate when minting/burning IBTokens. ????
-        _mint(account, amount);
+    function mint(address lender, uint amount) external {
+
+        if (balanceOf(lender) == 0) {
+            // Store the borrower's debt index at borrowing time
+            lenderExchangeRate[lender] = exchangeRate;
+        } 
+        // TODO: when a lender takes a second load we need to update lender's exchange rate
+        // using weighted average formula. This ensures fair interest accrual for multiple 
+        // deposits.
+        _mint(lender, amount);
     }
 
     /**
      * @notice Burns IBTokens from a specified account.
-     * @param account The address of the account to burn the tokens from.
+     * @param lender The address of the account to burn the tokens from.
      * @param amount The amount of IBTokens to burn.
      */
-    function burn(address account, uint amount) external {
-        _burn(account, amount);
+    function burn(address lender, uint amount) external {
+        // Reset the lender's  index when their deposit is fully withdrawn
+        lenderExchangeRate[lender] = 0;
+        _burn(lender, amount);
     }
 
     /**
@@ -74,9 +86,9 @@ abstract contract AbstractIBToken is ERC20 {
      */
     function recalculateExchangeRate(uint lendingRate) external returns (uint) {   
         uint timeElapsed = getElapsedTime();
-        uint interestAccrued = lendingRate * timeElapsed / ONE_YEAR;
+        uint accruedInterest = lendingRate * timeElapsed / ONE_YEAR;
         // exponential growth
-        exchangeRate = (exchangeRate * (DECIMALS + interestAccrued)) / DECIMALS;
+        exchangeRate = (exchangeRate * (DECIMALS + accruedInterest)) / DECIMALS;
         lastUpdateTimestamp = block.timestamp;
         emit ExchangeRateUpdated(exchangeRate);
         return exchangeRate;
@@ -119,6 +131,15 @@ abstract contract AbstractIBToken is ERC20 {
             from == address(0) || to == address(0),
             "Interests bearing tokens are non-transferable"
         );
+    }
+
+    /**
+     * @dev Retrieves the exchange rate at the time of lending for a specific lender.
+     * @param lender The address of the lender.
+     * @return The exchange rate at the time of lending for the specified lender.
+     */
+    function getLenderExchangeRateAtLending(address lender) public view returns (uint) {
+        return lenderExchangeRate[lender];
     }
 
     /** 
