@@ -6,6 +6,8 @@
 
 🌐 [Interest rates in decentralised finance](https://www.banque-france.fr/en/publications-and-statistics/publications/interest-rates-decentralised-finance)
 
+🌐 [Aave Interest Rate Model Explained](https://www.krayondigital.com/blog/aave-interest-rate-model-explained)
+
 🌐 [APR vs APY: What's the difference?](https://www.empower.com/the-currency/money/apr-vs-apy)
 
 🌐 [Debt Tokens: Understanding Aave's Approach](https://fastercapital.com/content/Debt-Tokens--Debt-Tokens--Understanding-Aave-s-Approach-to-IOUs.html?utm_source=chatgpt.com)
