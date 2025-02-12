@@ -1,5 +1,4 @@
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { DebtToken, Pool, TradableToken } from "../../typechain-types";
 import ContractRegistry from "../contracts/ContractRegistry";
 import { TransactionResponse } from "ethers";
 
@@ -22,7 +21,7 @@ export default class ProtocolAdmin {
     async sendFundsFromReserve(toAddress: string, amount: string, ): Promise<TransactionResponse> {
         const registry = await ContractRegistry.getInstance();
         const connect = registry.protocolReserve.connect(this.account);
-        return await connect.withdrawTradableToken(amount, toAddress);        
+        return await connect.withdrawBorrowedToken(amount, toAddress);        
     }
 
 }

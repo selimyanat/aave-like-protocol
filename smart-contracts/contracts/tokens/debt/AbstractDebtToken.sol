@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  * @dev Abstract implementation of a debt token. Tracks debt obligations of borrowers in a lending protocol.
  * This token is non-transferable between users and is used to track borrowers' outstanding debt balances.
  */
-abstract contract AbstractDebtToken is ERC20{
+abstract contract AbstractDebtToken is ERC20 {
 
     /// @notice Decimal precision used for calculations (1e18).
     uint public constant DECIMALS = 1e18;

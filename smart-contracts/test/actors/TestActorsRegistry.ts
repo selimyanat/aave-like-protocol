@@ -3,7 +3,8 @@ import Borrower from "./Borrower";
 import Lender from "./Lender";
 import Liquidator from "./Liquidator";
 import ProtocolAdmin from "./ProtocolAdmin";
-import TradableTokenFoundation from "./TradableTokenFoundation";
+import BorrowedTokensFaucet from "./BorrowedTokenFaucet";
+import CollateralTokenFaucet from "./CollateralTokenFaucet";
 
 
 export default class TestActorsRegistry {
@@ -15,7 +16,8 @@ export default class TestActorsRegistry {
     private _vitoTheLender!: Lender;  
     private _bobTheBorrower!: Borrower;
     private _gregTheLiquidator!: Liquidator;
-    private _tradableTokenFoundation!: TradableTokenFoundation;
+    private _borrowedTokenFaucet!: BorrowedTokensFaucet;
+    private _collateralTokenFaucet!: CollateralTokenFaucet
 
     private constructor() {}
 
@@ -37,9 +39,13 @@ export default class TestActorsRegistry {
 
     private async createInitialAcccounts(): Promise<void> {
         const accounts = await ethers.getSigners();        
+        // because address[0] is the contract owner / deployer. In real life scenario this would be
+        // different accounts
         this._charlesTheProtocolAdmin = await ProtocolAdmin.newInstance(accounts[0]);
-        // because address[0] is the contract owner
-        this._tradableTokenFoundation = await TradableTokenFoundation.newInstance(accounts[0]);
+        this._borrowedTokenFaucet = await BorrowedTokensFaucet.newInstance(accounts[0]);
+        this._collateralTokenFaucet = await CollateralTokenFaucet.newInstance(accounts[0]);
+
+        // set up the other actors with their accounts
         this._aliceTheLender = await Lender.newInstance(accounts[1]);
         this._vitoTheLender = await Lender.newInstance(accounts[2]);
         this._bobTheBorrower = await Borrower.newInstance(accounts[3]);
@@ -66,7 +72,11 @@ export default class TestActorsRegistry {
         return this._vitoTheLender;
     }
 
-    get tradableTokenFoundation(): TradableTokenFoundation {
-        return this._tradableTokenFoundation;
+    get borrowedTokenFaucet(): BorrowedTokensFaucet {
+        return this._borrowedTokenFaucet;
+    }
+
+    get collateralTokenFaucet(): CollateralTokenFaucet {
+        return this._collateralTokenFaucet;
     }
 }

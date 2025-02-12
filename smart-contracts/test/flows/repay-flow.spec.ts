@@ -3,7 +3,7 @@ import { expect } from "chai";
 import ContractRegistry from "../contracts/ContractRegistry";
 import TestActorsRegistry from "../actors/TestActorsRegistry";
 import {ZERO_ADDRESS, ONE_YEAR, ONE_DAY} from "../utils/Constants";
-import ScaledAmount, {TWO_HUNDRED_THOUSAND, ZERO, ONE_HUNDRED_THOUSAND, ONE_THOUSAND, TWO_THOUSAND, ONE} from "../utils/ScaledAmount";
+import ScaledAmount, {TWO_HUNDRED_THOUSAND, ZERO, ONE_HUNDRED_THOUSAND, ONE_THOUSAND, TWO_THOUSAND, ONE, TEN_THOUSAND} from "../utils/ScaledAmount";
 import BlockchainUtils from "../utils/BlockchainUtils";
 
 
@@ -20,7 +20,8 @@ describe("Repay flow", function() {
         registry = await ContractRegistry.getInstance();
         actors = await TestActorsRegistry.getInstance();
         
-        await actors.tradableTokenFoundation.airDrop(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND);
+        await actors.collateralTokenFaucet.transferTokens(actors.bobTheBorrower.getAddress(), TEN_THOUSAND);        
+        await actors.borrowedTokenFaucet.transferTokens(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND);
         await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND, ONE_DAY)        
         await actors.bobTheBorrower.borrow(ONE_THOUSAND, ONE);
                 
@@ -36,7 +37,7 @@ describe("Repay flow", function() {
     describe("When Bob repays its loan", async function() {
 
 
-        it ("Rejects the repay if the amount of token is less than the borrowed amount", async function(){
+        it ("Should reject the repay if the amount of token is less than the borrowed amount", async function(){
 
             await expect(actors.bobTheBorrower.repayAll(ONE_HUNDRED_THOUSAND, ONE_YEAR))
             .to.be
@@ -45,7 +46,7 @@ describe("Repay flow", function() {
 
         it ('Accepts the repay if the amount of token is equal to the borrowed amount with interests', async function() {
 
-            await actors.tradableTokenFoundation.airDrop(actors.bobTheBorrower.getAddress(), TWO_THOUSAND.toString());
+            await actors.borrowedTokenFaucet.transferTokens(actors.bobTheBorrower.getAddress(), TWO_THOUSAND.toString());
 
             const expectedBobDebtToRepayWithInterest = ScaledAmount.of("1080.939726027397259000").value();
             const expectedNetDebtPaymentAfterFee = ScaledAmount.of("1064.795616438356163200").value();
@@ -63,8 +64,10 @@ describe("Repay flow", function() {
                             ZERO) // utilization rate                  
                 .to.emit(registry.debtToken, "Transfer")    
                     .withArgs(actors.bobTheBorrower.getAddress(), ZERO_ADDRESS, bobDebtTokenBalanceBeforeRepay)
-                .to.emit(registry.tradableToken, "Transfer")
+                .to.emit(registry.borrowedToken, "Transfer")
                     .withArgs(actors.bobTheBorrower.getAddress(), registry.poolAddress, expectedBobDebtToRepayWithInterest)
+                .to.emit(registry.collateralToken, "Transfer")
+                    .withArgs(registry.poolAddress, actors.bobTheBorrower.getAddress(), ONE)
                 .to.emit(registry.borrowingRate, "BorrowingRateUpdated")                
                     .withArgs(ScaledAmount.of("0.080000000000000000").value())
                 .to.emit(registry.lendingRate, "LendingRateUpdated")                
@@ -73,23 +76,20 @@ describe("Repay flow", function() {
                     .withArgs(ScaledAmount.of("1.160939726027397259").value())                    
                 .to.emit(registry.ibToken, "ExchangeRateUpdated")                
                     .withArgs(ScaledAmount.of("1.064186564383561643").value())                
-                .to.emit(registry.protocolReserve, "TradableTokenFeeCollected")
+                .to.emit(registry.protocolReserve, "BorrowedTokenFeeCollected")
                     .withArgs(
                         registry.poolAddress, // pool
                         ScaledAmount.of("16.144109589041095800").value()) // fee
-                .to.emit(registry.tradableToken, "Transfer")
+                .to.emit(registry.borrowedToken, "Transfer")
                     .withArgs(registry.poolAddress, 
                         registry.protocolReserveAddress, 
                         ScaledAmount.of("16.144109589041095800").value())
                                                             
-                // Check the balances in this statement do not merge with the previous one, it acts weirdly ignoring the previous statements
-                await expect(txResponse).to.changeEtherBalance(actors.bobTheBorrower.getAddress(), ONE)
-
                 // Charles now wants to get the fee from the protocol reserve                
                 await expect(actors.charlesTheProtocolAdmin.sendFundsFromReserve(actors.charlesTheProtocolAdmin.getAddress(), ScaledAmount.of("16.144109589041095800").value() ))
-                    .to.emit(registry.protocolReserve, "TradableTokenWithdrawn")                    
+                    .to.emit(registry.protocolReserve, "BorrowedTokenWithdrawn")                    
                         .withArgs(actors.charlesTheProtocolAdmin.getAddress(), ScaledAmount.of("16.144109589041095800").value())
-                    .to.emit(registry.tradableToken, "Transfer")
+                    .to.emit(registry.borrowedToken, "Transfer")
                         .withArgs(registry.protocolReserveAddress, actors.charlesTheProtocolAdmin.getAddress(), ScaledAmount.of("16.144109589041095800").value()) 
                         
         })
