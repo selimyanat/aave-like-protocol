@@ -291,9 +291,10 @@ contract Pool is ReentrancyGuard {
         require(repaymentAmountWithInterest == allowance, "The amount of token to repay the debt must be equal to borrowed amount including the interests");
         SafeERC20.safeTransferFrom(borrowedToken, msg.sender, address(this), repaymentAmountWithInterest);
         debtToken.burn(borrower, borrowerDebtBalance);    
-        payable(msg.sender).transfer(liquidatorReward);            
+        
+        SafeERC20.safeTransfer(collateralToken, msg.sender, liquidatorReward);        
         if (remainingCollateral > 0) {
-            payable(borrower).transfer(remainingCollateral);
+            SafeERC20.safeTransfer(collateralToken, borrower, remainingCollateral);
         }
 
        // Udpate the rates

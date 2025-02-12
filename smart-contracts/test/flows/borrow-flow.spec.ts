@@ -3,7 +3,7 @@ import { expect } from "chai";
 import ContractRegistry from "../contracts/ContractRegistry";
 import TestActorsRegistry from "../actors/TestActorsRegistry";
 import {ZERO_ADDRESS, ONE_DAY } from "../utils/Constants";
-import ScaledAmount, {TWO_HUNDRED_THOUSAND, FOUR_HUNDRED_THOUSAND, ZERO, ONE_THOUSAND, TWO_THOUSAND, ONE, MINUS_ONE, TEN_THOUSAND} from "../utils/ScaledAmount";
+import ScaledAmount, {TWO_HUNDRED_THOUSAND, FOUR_HUNDRED_THOUSAND, ZERO, ONE_THOUSAND, TWO_THOUSAND, ONE, TEN_THOUSAND} from "../utils/ScaledAmount";
 import BlockchainUtils from "../utils/BlockchainUtils";
 
 
