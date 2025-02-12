@@ -39,7 +39,7 @@ export default class Borrower {
         const connectToCollateralToken = registry.collateralToken.connect(this.account);
         await connectToCollateralToken.approve(registry.poolAddress, collateralAmount);
         const connect = registry.pool.connect(this.account);    
-        return await connect.borrow(amountToBorrow, collateralAmount, {value: collateralAmount});
+        return await connect.borrow(amountToBorrow, collateralAmount);
     }
 
     async repayAll(amount: string, days?: number): Promise<TransactionResponse> {

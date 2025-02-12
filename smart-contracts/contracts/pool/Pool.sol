@@ -174,21 +174,20 @@ contract Pool is ReentrancyGuard {
      * @param amountOfBorrowedToken The amount of tokens to borrow.
      * @param amountOfCollateralToken The amount of collateral tokens to deposit.
      */
-    function borrow(uint amountOfBorrowedToken, uint amountOfCollateralToken) public payable nonReentrant{
+    function borrow(uint amountOfBorrowedToken, uint amountOfCollateralToken) public nonReentrant{
 
         require(amountOfBorrowedToken > 0, "The amount of token borrowed must be greater than 0");
         require(totalLiquidity >= amountOfBorrowedToken, "The amount of token borrowed must be less than the available liquidity");        
-        require(msg.value > 0, "The amount of token borrowed must have a collateral");
         require(amountOfCollateralToken > 0, "The amount of token borrowed must have a collateral");
 
         // Check the collateral ratio and the health factor
         uint collateralPrice = oracleGateway.getCollateralPrice();
         uint collateralRatio = getCollateralRatio(amountOfCollateralToken, amountOfBorrowedToken, collateralPrice);
         require(collateralRatio >= collateralFactor, "The collateral ratio must be greater or equal than the collateral factor");
-        uint healthFactor = getHealthFactor(msg.sender, amountOfBorrowedToken, msg.value, collateralPrice);
+        uint healthFactor = getHealthFactor(msg.sender, amountOfBorrowedToken, amountOfCollateralToken, collateralPrice);
         require(healthFactor >= SAFE_HEALTH_FACTOR, "The borrower health factor must be greater than 1 to allow the borrowing");        
         
-        collateralBalances[msg.sender] += msg.value;
+        collateralBalances[msg.sender] += amountOfCollateralToken;
         totalBorrows += amountOfBorrowedToken;
         totalLiquidity -= amountOfBorrowedToken;
         
@@ -238,11 +237,14 @@ contract Pool is ReentrancyGuard {
         uint allowance = borrowedToken.allowance(msg.sender, address(this));
         require(repaymentAmountWithInterest == allowance, "The amount of token to repay the debt must be equal to borrowed amount including the interests");
         SafeERC20.safeTransferFrom(borrowedToken, msg.sender, address(this), repaymentAmountWithInterest);
+        // TODO safeApprove is deprecated, replace it
         SafeERC20.safeApprove(borrowedToken, address(protocolReserve), protocolFee);
         protocolReserve.collectBorrowedTokenFee(protocolFee);
         debtToken.burn(msg.sender, debtTokenBalance);
-        payable(msg.sender).transfer(collateralToReturn);
 
+        // Return the collateral to the borrower
+        SafeERC20.safeTransfer(collateralToken, msg.sender, collateralToReturn);
+        
         // Udpate the rates
         uint utilizationRate = getUtilizationRate();
         uint newBorrowingRate = borrowingRate.recalculateBorrowingRate(utilizationRate);
@@ -365,5 +367,13 @@ contract Pool is ReentrancyGuard {
         uint totalCollateralValue =  collateralBalances[borrower]  * collateralPrice / 1e18;        
         uint healthFactor = (totalCollateralValue * liquidationThreshold) / totalDebtValue;
         return healthFactor;
+    }
+
+    /**
+     * Returns the collateral balance of a borrower.
+     * @param borrower The address of the borrower.
+     */
+    function getCollateralBalances(address borrower) public view returns (uint) {
+        return collateralBalances[borrower];
     }
 }
