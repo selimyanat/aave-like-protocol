@@ -141,17 +141,4 @@ abstract contract AbstractIBToken is ERC20 {
     function getLenderExchangeRateAtLending(address lender) public view returns (uint) {
         return lenderExchangeRate[lender];
     }
-
-    /** 
-    /**
-     * Lenders can check their real balance in the underlying asset. Improves usability for wallets and UI integrations.
-
-    function balanceOfUnderlying(address account) public view returns (uint) {
-        //notice Returns the equivalent balance of the underlying asset for a given IBToken holder.
-        //param account The address of the IBToken holder.
-     //return The balance in terms of the underlying asset.
-        return (balanceOf(account) * exchangeRate) / DECIMALS;
-    }
-    */ 
-
 }

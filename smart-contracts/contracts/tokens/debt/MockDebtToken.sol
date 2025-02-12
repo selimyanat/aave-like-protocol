@@ -20,8 +20,8 @@ contract MockDebtToken is AbstractDebtToken {
      * @param _debtIndex The initial debt index for the token.
      * @param _mockTimestamp The initial mock timestamp for testing elapsed time logic.
      */
-    constructor(string memory name, string memory symbol, uint _debtIndex, uint _mockTimestamp)
-        AbstractDebtToken(name, symbol, _debtIndex)
+    constructor(string memory name, string memory symbol, uint _debtIndex, uint _mockTimestamp, address _borrowingRate)
+        AbstractDebtToken(name, symbol, _debtIndex, _borrowingRate)
     {
         mockTimestamp = _mockTimestamp;
     }
