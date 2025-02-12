@@ -26,6 +26,7 @@ export const MINUS_ONE = ScaledAmount.of("-1").value();
 export const FIVE_HUNDRED = ScaledAmount.of("500").value();
 export const ONE_THOUSAND = ScaledAmount.of("1000").value();
 export const TWO_THOUSAND = ScaledAmount.of("2000").value();
+export const TEN_THOUSAND = ScaledAmount.of("10000").value();
 export const ONE_HUNDRED_THOUSAND = ScaledAmount.of("100000").value();
 export const TWO_HUNDRED_THOUSAND = ScaledAmount.of("200000").value();
 export const THREE_HUNDRED_THOUSAND = ScaledAmount.of("300000").value();

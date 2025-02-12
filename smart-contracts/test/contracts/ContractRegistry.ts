@@ -22,13 +22,12 @@ const DEBT_TOKEN_NAME = "Debt Token";
 const DEBT_TOKEN_SYMBOL = "DBT";
 const DEBT_TOKEN_INITIAL_DEBT_INDEX = ethers.parseUnits("1", TRADBALE_TOKEN_DECIMALS);
 const DEBT_TOKEN_INITIAL_ELAPSED_TIME = ONE_DAY
-
 const LENDING_RATE_RESERVE_FACTOR = ethers.parseUnits("0.2", 18);
 
 const BASE_BORROWING_RATE = ethers.parseUnits("0.08", 18);
 const BORROWING_RATE_MULTIPLIER = ethers.parseUnits("0.1", 18);
 const COLLATERAL_FACTOR = ethers.parseUnits("0.5", 18);
-// Here we are assuming that the collateral value is equal to the borrowed amount like 1 ETH for 2000 Test token (scaled to 18 decimals)
+// Here we are assuming that the collateral value is equal to the borrowed amount like 1 borrowed token = 2000 collateral token (scaled to 18 decimals)
 const COLLATERAL_PRICE =  ethers.parseUnits("2000", 18);
 // 80% liquidation threshold
 const LIQUIDATION_THRESHOLD = ethers.parseUnits("0.8", 18);
@@ -115,6 +114,7 @@ export default class ContractRegistry {
         this._protocolReserveAddress = await this._protocolReserve.getAddress();
         this._pool = await PoolFactory.deploy(
             this._borrowedTokenAddress, 
+            this._collateralTokenAddress,
             this._ibTokenAddress, 
             this._lendingRateAddress, 
             this._borrowingRateAddress, 

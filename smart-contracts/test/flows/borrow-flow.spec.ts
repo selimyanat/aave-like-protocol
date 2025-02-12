@@ -3,7 +3,7 @@ import { expect } from "chai";
 import ContractRegistry from "../contracts/ContractRegistry";
 import TestActorsRegistry from "../actors/TestActorsRegistry";
 import {ZERO_ADDRESS, ONE_DAY } from "../utils/Constants";
-import ScaledAmount, {TWO_HUNDRED_THOUSAND, FOUR_HUNDRED_THOUSAND, ZERO, ONE_THOUSAND, TWO_THOUSAND, ONE, MINUS_ONE} from "../utils/ScaledAmount";
+import ScaledAmount, {TWO_HUNDRED_THOUSAND, FOUR_HUNDRED_THOUSAND, ZERO, ONE_THOUSAND, TWO_THOUSAND, ONE, MINUS_ONE, TEN_THOUSAND} from "../utils/ScaledAmount";
 import BlockchainUtils from "../utils/BlockchainUtils";
 
 
@@ -20,6 +20,7 @@ describe("Borrow flow", function() {
         registry = await ContractRegistry.getInstance();
         actors = await TestActorsRegistry.getInstance();
         
+        await actors.collateralTokenFaucet.transferTokens(actors.bobTheBorrower.getAddress(), TEN_THOUSAND);
         await actors.borrowedTokenFaucet.transferTokens(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND);
         await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND, ONE_DAY)
         
@@ -82,13 +83,15 @@ describe("Borrow flow", function() {
                     ONE_THOUSAND, // total borrows
                     ScaledAmount.of("0.005").value()) // utilization rate)
             .to.emit(registry.borrowedToken, "Transfer")
-                .withArgs(registry.poolAddress, actors.bobTheBorrower.getAddress(), ONE_THOUSAND)                                    
+                .withArgs(registry.poolAddress, actors.bobTheBorrower.getAddress(), ONE_THOUSAND)
+            .to.emit(registry.collateralToken, "Transfer")
+                .withArgs(actors.bobTheBorrower.getAddress(), registry.poolAddress, ONE)
             .to.emit(registry.borrowingRate, "BorrowingRateUpdated")            
-                .withArgs(ScaledAmount.of("0.080500000000000000").value())         
+                .withArgs(ScaledAmount.of("0.080500000000000000").value())
             .to.emit(registry.lendingRate, "LendingRateUpdated")            
                 .withArgs(ScaledAmount.of("0.0644").value())
-            .to.emit(registry.debtToken, "Transfer")            
-                .withArgs(ZERO_ADDRESS, actors.bobTheBorrower.getAddress(), ScaledAmount.of("1000.219178082191780000").value())  
+            .to.emit(registry.debtToken, "Transfer")
+                .withArgs(ZERO_ADDRESS, actors.bobTheBorrower.getAddress(), ScaledAmount.of("1000.219178082191780000").value())                
             .to.emit(registry.debtToken, "DebtIndexUpdated")            
                 .withArgs(ScaledAmount.of("1.000439726027397259").value())
             expect(await actors.bobTheBorrower.getDebtTokenBalance())
@@ -97,8 +100,6 @@ describe("Borrow flow", function() {
             expect(await registry.ibToken.getExchangeRate())
             .to.be            
                 .equal(ScaledAmount.of("1.000175342465753424").value(), "The interest bearing token exchange rate has not changed since Alice's deposit")
-            // Check the balances in this statement do not merge with the previous one, it acts weirdly ignoring the previous statements
-            await expect(tx1Response).to.changeEtherBalance(actors.bobTheBorrower.getAddress(), MINUS_ONE);
 
             // Bob wants to borrow more tokens            
             const tx2Response = await actors.bobTheBorrower.borrow(ONE_THOUSAND, ONE);            
@@ -112,6 +113,8 @@ describe("Borrow flow", function() {
                     ScaledAmount.of("0.01").value()) // utilization rate) 
             .to.emit(registry.borrowedToken, "Transfer")
                 .withArgs(registry.poolAddress, actors.bobTheBorrower.getAddress(), ONE_THOUSAND)
+            .to.emit(registry.collateralToken, "Transfer")
+                .withArgs(actors.bobTheBorrower.getAddress(), registry.poolAddress, ONE)                
             .to.emit(registry.borrowingRate, "BorrowingRateUpdated")
                 .withArgs(ScaledAmount.of("0.081000000000000000").value())
             .to.emit(registry.lendingRate, "LendingRateUpdated")
@@ -120,8 +123,6 @@ describe("Borrow flow", function() {
                 .withArgs(ZERO_ADDRESS, actors.bobTheBorrower.getAddress(), ScaledAmount.of("1000.660273972602738000").value())  
             .to.emit(registry.debtToken, "DebtIndexUpdated")
                 .withArgs(ScaledAmount.of("1.000882191780821916").value())
-            // Check the balances in this statement do not merge with the previous one, it acts weirdly ignoring the previous statements            
-            await expect(tx2Response).to.changeEtherBalance(actors.bobTheBorrower.getAddress(), MINUS_ONE.toString());
         })
 
     })

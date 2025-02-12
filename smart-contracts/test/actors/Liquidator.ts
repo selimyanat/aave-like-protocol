@@ -4,7 +4,6 @@ import { TransactionResponse } from "ethers";
 
 export default class Liquidator {
 
-    private initialNativeBalance?: BigInt;
     private account: HardhatEthersSigner;
 
     private constructor(account: HardhatEthersSigner) {
@@ -12,9 +11,7 @@ export default class Liquidator {
     }
 
     static async newInstance(account: HardhatEthersSigner): Promise<Liquidator> {
-        const liquidator = new Liquidator(account);
-        liquidator.initialNativeBalance = await liquidator.account.provider.getBalance(account.getAddress());
-        return liquidator;
+        return new Liquidator(account);
     }
 
     async getBorrowedTokenBalance(): Promise<BigInt> {
@@ -40,11 +37,10 @@ export default class Liquidator {
         return this.account.address;
     }
 
-    public getInitialCollateralBalance(): BigInt {
-        return this.initialNativeBalance!;
+    async getCollateralBalance(): Promise<BigInt> {
+        const registry = await ContractRegistry.getInstance();
+        const connectToBorrowedToken = registry.borrowedToken.connect(this.account);
+        return await connectToBorrowedToken.balanceOf(this.account.getAddress());
     }
 
-    async getCollateralBalance(): Promise<BigInt> {
-        return await this.account.provider.getBalance(this.account.getAddress());
-    }
 }
