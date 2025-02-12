@@ -20,8 +20,8 @@ describe("Liquidation flow", function() {
         registry = await ContractRegistry.getInstance();
         actors = await TestActorsRegistry.getInstance();
             
-        await actors.tradableTokenFoundation.airDrop(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND);
-        await actors.tradableTokenFoundation.airDrop(actors.gregTheLiquidator.getAddress(), FOUR_HUNDRED_THOUSAND);
+        await actors.borrowedTokenFaucet.transferTokens(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND);
+        await actors.borrowedTokenFaucet.transferTokens(actors.gregTheLiquidator.getAddress(), FOUR_HUNDRED_THOUSAND);
         
         await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND, ONE_DAY)        
         await actors.bobTheBorrower.borrow(ONE_THOUSAND, ONE);
@@ -37,21 +37,21 @@ describe("Liquidation flow", function() {
 
     describe("When Greg liquidates Bob's position", async function() {
 
-        it("Rejects the liquidation if Greg triggers the liquidation for an address without a debt", async function () {
+        it("Should reject the liquidation if Greg triggers the liquidation for an address without a debt", async function () {
             
             await expect(actors.gregTheLiquidator.liquidate(actors.aliceTheLender.getAddress(), ONE_THOUSAND))
             .to.be
                 .revertedWith("The borrower has no debt to liquidate")
         })
 
-        it ("Rejects the liquidation if Bob's helath factor is safe", async function () {
+        it ("Should reject the liquidation if Bob's helath factor is safe", async function () {
             
             await expect(actors.gregTheLiquidator.liquidate(actors.bobTheBorrower.getAddress(), ONE_THOUSAND))
             .to.be
                 .revertedWith("The borrower is not liquidatable, because the health factor is safe")
         })
 
-        it ("Rejects the liquidation if the amount to repay Bob's debt is unsufficient to cover the interests", async function () {
+        it ("Should reject the liquidation if the amount to repay Bob's debt is unsufficient to cover the interests", async function () {
             
             // decrease the collateral value to make the health factor unsafe
             await registry.oracleGateway.updateCollateralPrice(FIVE_HUNDRED)
@@ -61,7 +61,7 @@ describe("Liquidation flow", function() {
                 .revertedWith("The amount of token to repay the debt must be equal to borrowed amount including the interests")
         })
 
-        it ("Accepts the Liquidation if the amount of token covers the borrowed amount with interests", async function () {
+        it ("Should accept the liquidation if the amount of token covers the borrowed amount with interests", async function () {
             
             // decrease the collateral value to make the health factor unsafe
             await registry.oracleGateway.updateCollateralPrice(FIVE_HUNDRED)
@@ -83,7 +83,7 @@ describe("Liquidation flow", function() {
                                 ZERO) // utilization rate
                     .to.emit(registry.debtToken, "Transfer")
                             .withArgs(actors.bobTheBorrower.getAddress(), ZERO_ADDRESS, bobDebtTokenBalanceBeforeRepay)
-                    .to.emit(registry.tradableToken, "Transfer")
+                    .to.emit(registry.borrowedToken, "Transfer")
                             .withArgs(actors.gregTheLiquidator.getAddress(), registry.poolAddress, expectedBobDebtToRepayWithInterest)
                     .to.emit(registry.borrowingRate, "BorrowingRateUpdated")                    
                             .withArgs(ScaledAmount.of("0.080000000000000000").value())

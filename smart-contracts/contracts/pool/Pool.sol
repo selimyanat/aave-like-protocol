@@ -9,7 +9,7 @@ import "../tokens/ib/IBToken.sol";
 import "../rates/LendingRate.sol";
 import "../rates/BorrowingRate.sol";
 import "../tokens/debt/DebtToken.sol";
-import "../tokens/TradableToken.sol";
+import "../tokens/BorrowedToken.sol";
 import "../oracle/OracleGateway.sol";
 import "../pool/ProtocolReserve.sol";
 
@@ -26,8 +26,8 @@ contract Pool is ReentrancyGuard {
     /// @notice The minimum health factor required for a borrower to borrow from the pool.
     uint public constant SAFE_HEALTH_FACTOR = 1e18;
 
-    /// @notice The tradable ERC20 token supported by the pool.
-    TradableToken public tradableToken;
+    /// @notice The borrowed token (ERC20) used in the protocol.
+    BorrowedToken public borrowedToken;
 
     /// @notice The interest-bearing token (IBToken) used to represent deposits.
     IBToken public ibToken;
@@ -82,7 +82,7 @@ contract Pool is ReentrancyGuard {
 
     /**
      * @notice Deploys the Pool contract.
-     * @param _tradableToken Address of the tradable token (ERC20) used in the protocol.
+     * @param _borrowedToken Address of the borrowed token (ERC20) used in the protocol.
      * @param _ibToken Address of the IBToken contract.
      * @param _lendingRate Address of the LendingRate contract.
      * @param _borrowingRate Address of the BorrowingRate contract.
@@ -93,9 +93,9 @@ contract Pool is ReentrancyGuard {
      * @param _liquidationThreshold Liquidation threshold for borrowers, scaled by `DECIMALS`.
      * @param _liquidationPenaltyRate Liquidation penalty rate, scaled by `DECIMALS`.
      */
-    constructor(address _tradableToken, address _ibToken, address _lendingRate, address _borrowingRate, address _debtToken, address _oracleGateway, address _protocolReserve, uint  _collateralFactor, uint _liquidationThreshold, uint _liquidationPenaltyRate) {
+    constructor(address _borrowedToken, address _ibToken, address _lendingRate, address _borrowingRate, address _debtToken, address _oracleGateway, address _protocolReserve, uint  _collateralFactor, uint _liquidationThreshold, uint _liquidationPenaltyRate) {
 
-        tradableToken = TradableToken(_tradableToken);        
+        borrowedToken = BorrowedToken(_borrowedToken);        
         lendingRate = LendingRate(_lendingRate);
         borrowingRate = BorrowingRate(_borrowingRate);
         oracleGateway = OracleGateway(_oracleGateway);
@@ -123,7 +123,7 @@ contract Pool is ReentrancyGuard {
         uint ibTokenAllocation = _amount * exchangeRate / DECIMALS;
 
         // Make the transfer(s)
-        SafeERC20.safeTransferFrom(tradableToken, msg.sender, address(this), _amount);
+        SafeERC20.safeTransferFrom(borrowedToken, msg.sender, address(this), _amount);
         ibToken.mint(msg.sender, ibTokenAllocation);
         
         // Update the rates
@@ -132,7 +132,7 @@ contract Pool is ReentrancyGuard {
         uint newLendingRate = lendingRate.recalculateLendingRate(newBorrowingRate);
         ibToken.recalculateExchangeRate(newLendingRate);
         
-        emit DepositAdded(msg.sender, address(tradableToken), _amount, totalLiquidity, totalBorrows, utilizationRate);
+        emit DepositAdded(msg.sender, address(borrowedToken), _amount, totalLiquidity, totalBorrows, utilizationRate);
     }
 
     /**
@@ -157,7 +157,7 @@ contract Pool is ReentrancyGuard {
         ibToken.recalculateExchangeRate(newlendingRate);
 
         // Make the transfer(s)
-        SafeERC20.safeTransfer(tradableToken, msg.sender, depositWithInterests);
+        SafeERC20.safeTransfer(borrowedToken, msg.sender, depositWithInterests);
 
         ibToken.burn(msg.sender, ibTokenBalance);
         emit FundsWithdrawn(msg.sender, depositWithInterests, totalLiquidity, totalBorrows, utilizationRate);
@@ -190,7 +190,7 @@ contract Pool is ReentrancyGuard {
         uint debtTokenAllocation = (_amount * debtToken.getDebtIndex()) / DECIMALS; 
         
         debtToken.mint(msg.sender, debtTokenAllocation);
-        SafeERC20.safeTransfer(tradableToken, msg.sender, _amount);
+        SafeERC20.safeTransfer(borrowedToken, msg.sender, _amount);
 
         // Udpate the rates
         uint utilizationRate = getUtilizationRate();
@@ -226,11 +226,11 @@ contract Pool is ReentrancyGuard {
         collateralBalances[msg.sender] = 0; 
                
         // Make the transfer(s)        
-        uint allowance = tradableToken.allowance(msg.sender, address(this));
+        uint allowance = borrowedToken.allowance(msg.sender, address(this));
         require(repaymentAmountWithInterest == allowance, "The amount of token to repay the debt must be equal to borrowed amount including the interests");
-        SafeERC20.safeTransferFrom(tradableToken, msg.sender, address(this), repaymentAmountWithInterest);
-        SafeERC20.safeApprove(tradableToken, address(protocolReserve), protocolFee);
-        protocolReserve.collectTradabelTokenFee(protocolFee);
+        SafeERC20.safeTransferFrom(borrowedToken, msg.sender, address(this), repaymentAmountWithInterest);
+        SafeERC20.safeApprove(borrowedToken, address(protocolReserve), protocolFee);
+        protocolReserve.collectBorrowedTokenFee(protocolFee);
         debtToken.burn(msg.sender, debtTokenBalance);
         payable(msg.sender).transfer(collateralToReturn);
 
@@ -276,9 +276,9 @@ contract Pool is ReentrancyGuard {
         require(liquidatorReward <= collateralToSeize, "Insufficient collateral to apply liquidator reward");
 
         // Make the transfer(s)        
-        uint allowance = tradableToken.allowance(msg.sender, address(this));
+        uint allowance = borrowedToken.allowance(msg.sender, address(this));
         require(repaymentAmountWithInterest == allowance, "The amount of token to repay the debt must be equal to borrowed amount including the interests");
-        SafeERC20.safeTransferFrom(tradableToken, msg.sender, address(this), repaymentAmountWithInterest);
+        SafeERC20.safeTransferFrom(borrowedToken, msg.sender, address(this), repaymentAmountWithInterest);
         debtToken.burn(_borrower, borrowerDebtBalance);    
         payable(msg.sender).transfer(liquidatorReward);            
         if (remainingCollateral > 0) {
@@ -314,7 +314,7 @@ contract Pool is ReentrancyGuard {
      *      Collateral Ratio = (Collateral Value * DECIMALS) / Borrowed Amount
      * @param _collateralAmount The amount of collateral in ETH.
      * @param _borrowedAmount The amount of tokens borrowed.
-     * @param _collateralPrice The price of the collateral asset in terms of the tradable token.
+     * @param _collateralPrice The collateral price expressed in borrowed tokens
      * @return The collateral ratio as a percentage scaled by `DECIMALS`.
      */
     function getCollateralRatio(uint _collateralAmount, uint _borrowedAmount, uint _collateralPrice) internal pure returns (uint) {
@@ -331,7 +331,7 @@ contract Pool is ReentrancyGuard {
      * @param _borrower The address of the borrower.
      * @param _newBorrowedAmount The new amount the borrower wishes to borrow.
      * @param _newCollateralAmount The additional collateral the borrower is depositing.
-     * @param _collateralPrice The price of the collateral asset in terms of the tradable token.
+     * @param _collateralPrice The collateral price expressed in borrowed tokens
      * @return The health factor as a percentage scaled by `DECIMALS`.
      */
     function getHealthFactor(address _borrower, uint _newBorrowedAmount, uint _newCollateralAmount, uint _collateralPrice) internal view returns (uint) {
@@ -346,7 +346,7 @@ contract Pool is ReentrancyGuard {
     /**
      * @notice Calculates the borrower’s health factor based on their existing collateral and debt.
      * @param _borrower The address of the borrower.
-     * @param _collateralPrice The price of the collateral asset in terms of the tradable token.
+     * @param _collateralPrice The collateral price expressed in borrowed tokens
      * @return The health factor as a percentage scaled by `DECIMALS`.
      */
     function getHealthFactor(address _borrower, uint _collateralPrice) internal view returns (uint) {

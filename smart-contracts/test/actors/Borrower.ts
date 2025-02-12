@@ -17,9 +17,9 @@ export default class Borrower {
         return borrower;
     }
 
-    async getTradableTokenBalance(): Promise<BigInt> {
+    async getBorrowedTokenBalance(): Promise<BigInt> {
         const registry = await ContractRegistry.getInstance();
-        return await registry.tradableToken.balanceOf(this.account.getAddress());
+        return await registry.borrowedToken.balanceOf(this.account.getAddress());
     }
 
     async getDebtTokenBalance(): Promise<BigInt> {
@@ -28,9 +28,9 @@ export default class Borrower {
     }
 
     // TODO: REMOVE ME, This method is not used in the test
-    async approveTradableTokenTransferTo(toAddress: string, amount: string): Promise<void> {
+    async approveBorrowedTokenTransferTo(toAddress: string, amount: string): Promise<void> {
         const registry = await ContractRegistry.getInstance();
-        const connect = registry.tradableToken.connect(this.account);
+        const connect = registry.borrowedToken.connect(this.account);
         await connect.approve(toAddress, amount);        
     }
 
@@ -58,8 +58,8 @@ export default class Borrower {
             await registry.ibToken.setMockTimestamp(seconds);
             await registry.debtToken.setMockTimestamp(seconds);
         }
-        const connectToTradableToken = registry.tradableToken.connect(this.account);
-        await connectToTradableToken.approve(registry.poolAddress, amount);
+        const connectToBorrowedToken = registry.borrowedToken.connect(this.account);
+        await connectToBorrowedToken.approve(registry.poolAddress, amount);
         const connect = registry.pool.connect(this.account);
         return await connect.repay();
     }

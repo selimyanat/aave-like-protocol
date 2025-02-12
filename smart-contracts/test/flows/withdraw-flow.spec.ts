@@ -20,7 +20,7 @@ describe("Withdraw flow", function() {
         registry = await ContractRegistry.getInstance();
         actors = await TestActorsRegistry.getInstance();
         
-        await actors.tradableTokenFoundation.airDrop(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND.toString());
+        await actors.borrowedTokenFaucet.transferTokens(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND.toString());
         
         blokchainStateId = await BlockchainUtils.saveState()
     })
@@ -31,13 +31,13 @@ describe("Withdraw flow", function() {
         await TestActorsRegistry.resetInstance();
     })
 
-    describe("When Alice withdraw her tradable tokens", async function() {
+    describe("When Alice withdraw her tokens", async function() {
 
-        it ("Returns to Alice her initial deposit plus interests earned after a year", async function () {
+        it ("Should return to Alice her initial deposit plus interests earned after a year", async function () {
             
             await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND.toString());
             // simulate another deposit so that we can pay back the alice's deposit with interests
-            await actors.tradableTokenFoundation.airDrop(actors.vitoTheLender.getAddress(), TWO_HUNDRED_THOUSAND);
+            await actors.borrowedTokenFaucet.transferTokens(actors.vitoTheLender.getAddress(), TWO_HUNDRED_THOUSAND);
             await actors.vitoTheLender.deposit(TWO_HUNDRED_THOUSAND, ONE_DAY);
 
             await expect(actors.aliceTheLender.withdrawAll(ONE_YEAR))
@@ -57,14 +57,14 @@ describe("Withdraw flow", function() {
                 .withArgs(ScaledAmount.of("1.132691617937239420").value())                                
             .to.emit(registry.ibToken, "Transfer")
                 .withArgs(actors.aliceTheLender.getAddress(), ZERO_ADDRESS, TWO_HUNDRED_THOUSAND)                
-            .to.emit(registry.tradableToken, "Transfer")
+            .to.emit(registry.borrowedToken, "Transfer")
                 .withArgs(registry.poolAddress, actors.aliceTheLender.getAddress(), ScaledAmount.of("212911.958258879590400000").value())
             expect(await registry.debtToken.getDebtIndex())
             .to.be
                 .equal(await registry.debtToken.getInitialDebtIndex(), "The debt token index must be equal to the initial debt index")                
         })
 
-        it ("Refuses the withdrawal to Alice if there is not enough funds to cover the withdrawal", async function () {
+        it ("Should reject the withdrawal to Alice if there is not enough funds to cover the withdrawal", async function () {
 
             await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND);
 

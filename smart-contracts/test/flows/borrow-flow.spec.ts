@@ -20,7 +20,7 @@ describe("Borrow flow", function() {
         registry = await ContractRegistry.getInstance();
         actors = await TestActorsRegistry.getInstance();
         
-        await actors.tradableTokenFoundation.airDrop(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND);
+        await actors.borrowedTokenFaucet.transferTokens(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND);
         await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND, ONE_DAY)
         
         blokchainStateId = await BlockchainUtils.saveState()
@@ -32,45 +32,45 @@ describe("Borrow flow", function() {
         await TestActorsRegistry.resetInstance();
     })
 
-    describe("When Bob attempts to borrow tradable tokens", async function() {
+    describe("When Bob attempts to borrow tokens", async function() {
 
 
-        it("Should rejects the borrowing if Bob attempts to borrow a zero or negative amount", async function () {
+        it("Should reject the borrowing if Bob attempts to borrow a zero or negative amount", async function () {
 
             await expect(actors.bobTheBorrower.borrow(ZERO, ONE))
             .to.be
                 .revertedWith("The amount of token borrowed must be greater than 0")
         })
 
-        it("Should rejects the borrowing if Bob attempts to borrow more than the available liquidity", async function () {
+        it("Should reject the borrowing if Bob attempts to borrow more than the available liquidity", async function () {
 
             await expect(actors.bobTheBorrower.borrow(FOUR_HUNDRED_THOUSAND, ONE))
             .to.be
                 .revertedWith("The amount of token borrowed must be less than the available liquidity")
         })
 
-        it ("Should rejects the borrowing if Bob attempts to borrow without a collateral", async function () {
+        it ("Should reject the borrowing if Bob attempts to borrow without a collateral", async function () {
 
             await expect(actors.bobTheBorrower.borrow(ONE_THOUSAND, ZERO))
             .to.be
                 .revertedWith("The amount of token borrowed must have a collateral")
         })
 
-        it ("Should rejects the borrowing if Bob attempts to borrow with an insufficient collateral", async function () {
+        it ("Should reject the borrowing if Bob attempts to borrow with an insufficient collateral", async function () {
 
             await expect(actors.bobTheBorrower.borrow(TWO_THOUSAND, ScaledAmount.of("0.25").value()))
             .to.be
                 .revertedWith("The collateral ratio must be greater or equal than the collateral factor")
         })
 
-        it ("Should rejects the borrowing if Bob attempts to borrow with a collateral not enough to have a safe health factor", async function () {
+        it ("Should reject the borrowing if Bob attempts to borrow with a collateral not enough to have a safe health factor", async function () {
 
             await expect(actors.bobTheBorrower.borrow(TWO_THOUSAND, ScaledAmount.of("0.75").value()))
             .to.be
                 .revertedWith("The borrower health factor must be greater than 1 to allow the borrowing")
         })
 
-        it ("Should successfully allow Bob to borrow tradable tokens with a sufficient collateral and health factor", async function () {
+        it ("Should successfully allow Bob to borrow tokens with a sufficient collateral and health factor", async function () {
             
             const tx1Response = await actors.bobTheBorrower.borrow(ONE_THOUSAND, ONE)
             await expect(tx1Response)
@@ -81,7 +81,7 @@ describe("Borrow flow", function() {
                     ScaledAmount.of("199000").value(), // total liquidity
                     ONE_THOUSAND, // total borrows
                     ScaledAmount.of("0.005").value()) // utilization rate)
-            .to.emit(registry.tradableToken, "Transfer")
+            .to.emit(registry.borrowedToken, "Transfer")
                 .withArgs(registry.poolAddress, actors.bobTheBorrower.getAddress(), ONE_THOUSAND)                                    
             .to.emit(registry.borrowingRate, "BorrowingRateUpdated")            
                 .withArgs(ScaledAmount.of("0.080500000000000000").value())         
@@ -110,7 +110,7 @@ describe("Borrow flow", function() {
                     ScaledAmount.of("198000").value(), // total liquidity
                     TWO_THOUSAND, // total borrows                    
                     ScaledAmount.of("0.01").value()) // utilization rate) 
-            .to.emit(registry.tradableToken, "Transfer")
+            .to.emit(registry.borrowedToken, "Transfer")
                 .withArgs(registry.poolAddress, actors.bobTheBorrower.getAddress(), ONE_THOUSAND)
             .to.emit(registry.borrowingRate, "BorrowingRateUpdated")
                 .withArgs(ScaledAmount.of("0.081000000000000000").value())

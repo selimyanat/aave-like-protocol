@@ -19,8 +19,8 @@ describe("Deposit flow", function() {
         registry = await ContractRegistry.getInstance();
         actors = await TestActorsRegistry.getInstance();
         
-        await actors.tradableTokenFoundation.airDrop(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND);
-        await actors.tradableTokenFoundation.airDrop(actors.gregTheLiquidator.getAddress(), FOUR_HUNDRED_THOUSAND);
+        await actors.borrowedTokenFaucet.transferTokens(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND);
+        await actors.borrowedTokenFaucet.transferTokens(actors.gregTheLiquidator.getAddress(), FOUR_HUNDRED_THOUSAND);
         
         blokchainStateId = await BlockchainUtils.saveState()
     })
@@ -31,22 +31,22 @@ describe("Deposit flow", function() {
         await TestActorsRegistry.resetInstance();
     })
 
-    describe("When Alice attempts to deposit in the liquidity pool", async function () {
+    describe("When Alice attempts to deposit tokens in the liquidity pool", async function () {
 
-        it ("Should rejects the deposit if the amount of token is zero", async function(){
+        it ("Should reject the deposit if the amount of token is zero", async function(){
 
             await expect(actors.aliceTheLender.deposit(ZERO))
             .to.be
                 .revertedWith("The deposit must be greater than 0")
         })
 
-        it("Should successfully deposit tradable tokens and receive interest bearing tokens in exchange", async function () {
+        it("Should successfully deposit tokens and receive interest bearing tokens in exchange", async function () {
             
             await expect(actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND))
             .to.emit(registry.pool, "DepositAdded")
                 .withArgs(
                     actors.aliceTheLender.getAddress(), // depositor
-                    registry.tradableTokenAddress,  // token
+                    registry.borrowedTokenAddress,  // token
                     TWO_HUNDRED_THOUSAND, // deposit amount
                     TWO_HUNDRED_THOUSAND, // total liquidty
                     ZERO, // total borrows                 
@@ -59,15 +59,15 @@ describe("Deposit flow", function() {
             .to.emit(registry.ibToken, "Transfer")
                 .withArgs(ZERO_ADDRESS, actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND)
 
-            expect(await registry.tradableToken.balanceOf(registry.poolAddress))
+            expect(await registry.borrowedToken.balanceOf(registry.poolAddress))
             .to.be
-                .equal(TWO_HUNDRED_THOUSAND, "The pool balance in tradable token must be equal to Alice's deposit")
+                .equal(TWO_HUNDRED_THOUSAND, "The pool balance in tokens must be equal to Alice's deposit")
             expect(await actors.aliceTheLender.getIBTokenBalance())
             .to.be
-                .equal(TWO_HUNDRED_THOUSAND, "Alice balance in Intest bearing token should be the the product of the balance in Tradable token deposited and their exchange rate")
-            expect(await actors.aliceTheLender.getTradableTokenBalance())
+                .equal(TWO_HUNDRED_THOUSAND, "Alice's balance in Intest bearing token should be the the product of the balance in tokens deposited and their exchange rate")
+            expect(await actors.aliceTheLender.getBorrowedTokenBalance())
             .to.be
-                .equal(ZERO, "Alice balance in tradable token must be zero")            
+                .equal(ZERO, "Alice's balance in tokens must be zero")            
             expect(await registry.ibToken.getExchangeRate())
             .to.be    
                 .equal(ScaledAmount.of("1.000175342465753424").value(), "The interest bearing token exchange rate has slightly increased due to the accrued interests") 

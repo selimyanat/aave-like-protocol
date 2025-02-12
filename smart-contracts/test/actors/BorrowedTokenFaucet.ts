@@ -3,7 +3,7 @@ import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import ContractRegistry from "../contracts/ContractRegistry";
 
 
-export default class TradableTokenFoundation {
+export default class BorrowedTokensFaucet {
 
     private account: HardhatEthersSigner;
 
@@ -11,13 +11,13 @@ export default class TradableTokenFoundation {
         this.account = account;
     }
 
-    static async newInstance(account: HardhatEthersSigner): Promise<TradableTokenFoundation> {
-        return new TradableTokenFoundation(account);
+    static async newInstance(account: HardhatEthersSigner): Promise<BorrowedTokensFaucet> {
+        return new BorrowedTokensFaucet(account);
     }
 
-    async airDrop(toAddress: string, amount: string): Promise<void> {
+    async transferTokens(toAddress: string, amount: string): Promise<void> {
         const registry = await ContractRegistry.getInstance();
-        const connect = registry.tradableToken.connect(this.account);
+        const connect = registry.borrowedToken.connect(this.account);
         await connect.transfer(toAddress, amount);
     }
 
