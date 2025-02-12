@@ -9,7 +9,7 @@ import "../tokens/ib/IBToken.sol";
 import "../rates/LendingRate.sol";
 import "../rates/BorrowingRate.sol";
 import "../tokens/debt/DebtToken.sol";
-import "../tokens/BorrowedToken.sol";
+import "../tokens/borrowed/BorrowedToken.sol";
 import "../tokens/collateral/CollateralToken.sol";
 import "../oracle/OracleGateway.sol";
 import "../pool/ProtocolReserve.sol";

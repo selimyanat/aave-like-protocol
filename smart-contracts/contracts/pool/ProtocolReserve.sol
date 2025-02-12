@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../tokens/BorrowedToken.sol";
+import "../tokens/borrowed/BorrowedToken.sol";
 
 
 contract ProtocolReserve {
