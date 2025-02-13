@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "hardhat/console.sol";
+import "../../rates/LendingRate.sol";
 
 /**
  * @title AbstractIBToken
@@ -16,6 +16,9 @@ abstract contract AbstractIBToken is ERC20 {
 
     /// @notice Number of seconds in one year, used for annualized interest calculations.
     uint public constant ONE_YEAR = 365 days;
+
+    /// @notice The contract managing the lending rate for depositors.
+    LendingRate public lendingRate;
 
     /// @notice Current exchange rate of the IBToken in terms of the underlying asset.
     /// @dev Reflects the accrued interest and pool growth.
@@ -39,11 +42,13 @@ abstract contract AbstractIBToken is ERC20 {
      * @param name The name of the IBToken.
      * @param symbol The symbol of the IBToken.
      * @param _exchangeRate The initial exchange rate of the IBToken in terms of the underlying asset.
+     * @param _lendingRate The address of the LendingRate contract managing the lending rate.
      */
-    constructor(string memory name, string memory symbol, uint _exchangeRate) ERC20(name, symbol) {
+    constructor(string memory name, string memory symbol, uint _exchangeRate, address _lendingRate) ERC20(name, symbol) {
         initialExchangeRate = _exchangeRate;
         exchangeRate = _exchangeRate;
         lastUpdateTimestamp = block.timestamp;
+        lendingRate = LendingRate(_lendingRate);
     }
 
     /**
@@ -81,12 +86,11 @@ abstract contract AbstractIBToken is ERC20 {
      *      New Exchange Rate = Current Exchange Rate × (1 + Interest Accrued)
      *      Interest Accrued = Lending Rate × Time Elapsed / ONE_YEAR
      * Emits an `ExchangeRateUpdated` event.
-     * @param lendingRate The current lending rate, scaled by `DECIMALS`.
      * @return The updated exchange rate.
      */
-    function recalculateExchangeRate(uint lendingRate) external returns (uint) {   
+    function recalculateExchangeRate() external returns (uint) {   
         uint timeElapsed = getElapsedTime();
-        uint accruedInterest = lendingRate * timeElapsed / ONE_YEAR;
+        uint accruedInterest = lendingRate.getLendingRate() * timeElapsed / ONE_YEAR;
         // exponential growth
         exchangeRate = (exchangeRate * (DECIMALS + accruedInterest)) / DECIMALS;
         lastUpdateTimestamp = block.timestamp;

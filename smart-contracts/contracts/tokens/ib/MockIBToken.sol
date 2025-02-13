@@ -6,7 +6,8 @@ import "./AbstractIBToken.sol";
 /**
  * @title MockIBToken
  * @dev A mock implementation of the AbstractIBToken contract, used for testing purposes.
- * This contract allows developers to override the `getElapsedTime` function using a mock timestamp, enabling controlled testing of time-dependent logic.
+ * This contract allows developers to override the `getElapsedTime` function using a mock timestamp,
+ * enabling controlled testing of time-dependent logic.
  */
 contract MockIBToken is AbstractIBToken {
 
@@ -19,10 +20,11 @@ contract MockIBToken is AbstractIBToken {
      * @param name The name of the IBToken.
      * @param symbol The symbol of the IBToken.
      * @param _exchangeRate The initial exchange rate for the IBToken.
+     * @param _lendingRate The address of the LendingRate contract managing the lending rate.
      * @param _mockTimestamp The initial mock timestamp for testing elapsed time logic.
      */
-    constructor(string memory name, string memory symbol, uint _exchangeRate, uint _mockTimestamp)
-        AbstractIBToken(name, symbol, _exchangeRate)
+    constructor(string memory name, string memory symbol, uint _exchangeRate, address _lendingRate, uint _mockTimestamp)
+        AbstractIBToken(name, symbol, _exchangeRate,  _lendingRate)
     {
         mockTimestamp = _mockTimestamp;
     }

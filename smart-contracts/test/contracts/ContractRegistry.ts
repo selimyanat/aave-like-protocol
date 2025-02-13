@@ -1,7 +1,6 @@
 import { ethers } from "hardhat";
 import { Pool, MockIBToken, MockDebtToken, LendingRate, BorrowingRate, OracleGateway, ProtocolReserve, CollateralToken, BorrowedToken} from "../../typechain-types";
 
-
 const TRABLE_TOKEN_NAME = "Trable Token";
 const TRABLE_TOKEN_SYMBOL = "TRB";
 const TRADBALE_TOKEN_DECIMALS = 18
@@ -92,16 +91,14 @@ export default class ContractRegistry {
           ethers.getContractFactory("CollateralToken")
         ]);
 
-        this._borrowedToken = await BorrowedTokenFactory.deploy(TRABLE_TOKEN_NAME, TRABLE_TOKEN_SYMBOL, TRADABLE_TOKEN_SUPPLY);
-        this._ibToken = await MockIBTokenFactory.deploy(IB_TOKEN_NAME, IB_TOKEN_SYMBOL, IB_TOKEN_INITIAL_EXCHANGE_RATE, IB_TOKEN_INITIAL_ELAPSED_TIME);
+        this._borrowedToken = await BorrowedTokenFactory.deploy(TRABLE_TOKEN_NAME, TRABLE_TOKEN_SYMBOL, TRADABLE_TOKEN_SUPPLY);        
         this._lendingRate = await LendingRateFactory.deploy(LENDING_RATE_RESERVE_FACTOR);
         this._borrowingRate = await BorrowingRateFactory.deploy(BASE_BORROWING_RATE, BORROWING_RATE_MULTIPLIER);
         this._oracleGateway = await OracleGatewayFactory.deploy(COLLATERAL_PRICE);
         this._collateralToken = await CollateralTokenFactory.deploy(COLLATERAL_TOKEN_NAME, COLLATERAL_TOKEN_SYMBOL, COLLATERAL_TOKEN_SUPPLY);       
 
-        [this._borrowedTokenAddress, this._ibTokenAddress, this._lendingRateAddress, this._borrowingRateAddress, this._oracleGatewayAddress, this._collateralTokenAddress] = await Promise.all([
+        [this._borrowedTokenAddress, this._lendingRateAddress, this._borrowingRateAddress, this._oracleGatewayAddress, this._collateralTokenAddress] = await Promise.all([
             this._borrowedToken.getAddress(),
-            this.ibToken.getAddress(),
             this._lendingRate.getAddress(),
             this._borrowingRate.getAddress(),
             this._oracleGateway.getAddress(),
@@ -113,6 +110,9 @@ export default class ContractRegistry {
 
         this._debtToken = await MockDebtTokenFactory.deploy(DEBT_TOKEN_NAME, DEBT_TOKEN_SYMBOL, DEBT_TOKEN_INITIAL_DEBT_INDEX, DEBT_TOKEN_INITIAL_ELAPSED_TIME, this._borrowingRateAddress);
         this._debtTokenAddress = await this._debtToken.getAddress();
+
+        this._ibToken = await MockIBTokenFactory.deploy(IB_TOKEN_NAME, IB_TOKEN_SYMBOL, IB_TOKEN_INITIAL_EXCHANGE_RATE, this._lendingRateAddress, IB_TOKEN_INITIAL_ELAPSED_TIME);
+        this._ibTokenAddress = await this._ibToken.getAddress()
 
         this._pool = await PoolFactory.deploy(
             this._borrowedTokenAddress, 

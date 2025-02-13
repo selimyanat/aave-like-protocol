@@ -20,7 +20,8 @@ abstract contract IBToken is AbstractIBToken {
      * @param name The name of the IBToken.
      * @param symbol The symbol of the IBToken.
      * @param _exchangeRate The initial exchange rate of the IBToken in terms of the underlying asset.
+     * @param _lendingRate The address of the LendingRate contract managing the lending rate.
      */
-    constructor(string memory name, string memory symbol, uint _exchangeRate) AbstractIBToken(name, symbol,  _exchangeRate) {
+    constructor(string memory name, string memory symbol, uint _exchangeRate, address _lendingRate) AbstractIBToken(name, symbol,  _exchangeRate,  _lendingRate) {
     }
 }
