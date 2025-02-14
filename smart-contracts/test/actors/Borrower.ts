@@ -56,6 +56,11 @@ export default class Borrower {
         return await connect.repay();
     }
 
+    async estimateTotalDebt(): Promise<string> {
+        const registry = await ContractRegistry.getInstance();
+        return (await registry.debtToken.estimateTotalDebtOwed(this.getAddress())).toString();
+    }
+
     async getCollateralBalance(): Promise<BigInt> {
         const registry = await ContractRegistry.getInstance();
         const connectToBorrowedToken = registry.borrowedToken.connect(this.account);

@@ -9,6 +9,8 @@ import "../../rates/LendingRate.sol";
  * The IBToken reflects the yield distribution implicitly through an increasing exchange rate, ensuring that
  * lenders' balances automatically reflect their share of the pool's growth without explicit yield distribution.
  */
+import "hardhat/console.sol";
+
 abstract contract AbstractIBToken is ERC20 {
 
     /// @notice Decimal precision used for fixed-point calculations (1e18).
@@ -89,6 +91,7 @@ abstract contract AbstractIBToken is ERC20 {
      * @return The updated exchange rate.
      */
     function recalculateExchangeRate() external returns (uint) {   
+
         uint timeElapsed = getElapsedTime();
         uint accruedInterest = lendingRate.getLendingRate() * timeElapsed / ONE_YEAR;
         // exponential growth
@@ -96,6 +99,45 @@ abstract contract AbstractIBToken is ERC20 {
         lastUpdateTimestamp = block.timestamp;
         emit ExchangeRateUpdated(exchangeRate);
         return exchangeRate;
+    }
+
+    /**
+    * @dev Estimates the lender's total earned, including real-time accrued interest.
+    * @param lender The address of the lender.
+    * @return The estimated total earned in real-time.
+    */
+    function estimateTotalEarned(address lender) public view returns (uint) {
+
+        uint lenderDeposit = balanceOf(lender);
+        require(lenderDeposit > 0, "No outstanding deposit for this lender");
+        uint lenderExchangeRateAtDeposit = lenderExchangeRate[lender];
+        require(lenderExchangeRateAtDeposit > 0, "Lender deposit exchange rate not found");
+
+        // Calculate estimated interest accrued since last update
+        uint timeElapsed = getElapsedTime();
+        uint estimatedInterestAccrued = lendingRate.getLendingRate() * timeElapsed / ONE_YEAR;
+
+        // Estimate current exchange rate including accrued interest - exponential growth
+        uint estimatedExchangeRate = (exchangeRate * (DECIMALS + estimatedInterestAccrued)) / DECIMALS;
+
+        // Calculate estimated total earned by lender
+        return (lenderDeposit * estimatedExchangeRate) / lenderExchangeRateAtDeposit;
+    }
+
+    /**
+     * @notice Retrieves the total earned by a lender, including real-time accrued interest.
+     * @param lender The address of the lender.
+     * @return The total earned by the lender, including real-time accrued interest.
+     */
+    function getTotalEarned(address lender) external view returns (uint) {  
+
+        uint lenderDeposit = balanceOf(lender);
+        require(lenderDeposit > 0, "No outstanding deposit for this lender");
+        uint lenderExchangeRateAtDeposit = lenderExchangeRate[lender];
+        require(lenderExchangeRateAtDeposit > 0, "Lender deposit exchange rate not found");
+        
+        // Calculate estimated total earned by lender
+        return lenderDeposit * exchangeRate / lenderExchangeRate[lender];
     }
 
     /**

@@ -135,7 +135,7 @@ contract Pool is ReentrancyGuard {
         // Update the rates
         uint utilizationRate = getUtilizationRate();
         uint newBorrowingRate = borrowingRate.recalculateBorrowingRate(utilizationRate);
-        uint newLendingRate = lendingRate.recalculateLendingRate(newBorrowingRate);
+        lendingRate.recalculateLendingRate(newBorrowingRate);
         ibToken.recalculateExchangeRate();
         
         emit DepositAdded(msg.sender, address(borrowedToken), amount, totalLiquidity, totalBorrows, utilizationRate);
@@ -152,14 +152,14 @@ contract Pool is ReentrancyGuard {
         // Calculate the amount to be withdrawn: deposit + interest
         // Get fresh exchange rate, as we only update the exchange rat when the lender deposits, withdraws or during liquidation
         ibToken.recalculateExchangeRate();
-        uint depositWithInterests = (ibTokenBalance * ibToken.getExchangeRate()) / ibToken.getLenderExchangeRateAtLending(msg.sender);
+        uint depositWithInterests = ibToken.getTotalEarned(msg.sender);
         require(totalLiquidity >= depositWithInterests, "The amount of token and interests cannot be withdrawn, because of insufficient liquidity");
         totalLiquidity -= depositWithInterests;
 
         // Udpate the rates
         uint utilizationRate = getUtilizationRate();
         uint newBorrowingRate = borrowingRate.recalculateBorrowingRate(utilizationRate);
-        uint newlendingRate = lendingRate.recalculateLendingRate(newBorrowingRate);
+        lendingRate.recalculateLendingRate(newBorrowingRate);
         ibToken.recalculateExchangeRate();
 
         // Make the transfer(s)
@@ -250,7 +250,7 @@ contract Pool is ReentrancyGuard {
         // Udpate the rates
         uint utilizationRate = getUtilizationRate();
         uint newBorrowingRate = borrowingRate.recalculateBorrowingRate(utilizationRate);
-        uint newLendingRate = lendingRate.recalculateLendingRate(newBorrowingRate);
+        lendingRate.recalculateLendingRate(newBorrowingRate);
         debtToken.recalculateDebtIndex();
         ibToken.recalculateExchangeRate();
 
@@ -301,7 +301,7 @@ contract Pool is ReentrancyGuard {
        // Udpate the rates
         uint utilizationRate = getUtilizationRate();
         uint newBorrowingRate = borrowingRate.recalculateBorrowingRate(utilizationRate);
-        uint newLendingRate = lendingRate.recalculateLendingRate(newBorrowingRate);
+        lendingRate.recalculateLendingRate(newBorrowingRate);
         debtToken.recalculateDebtIndex();
         ibToken.recalculateExchangeRate();
         emit Liquidation(borrower, msg.sender, repaymentAmountWithInterest, liquidatorReward, remainingCollateral, totalLiquidity, totalBorrows, utilizationRate);

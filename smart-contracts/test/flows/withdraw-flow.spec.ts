@@ -5,6 +5,8 @@ import TestActorsRegistry from "../actors/TestActorsRegistry";
 import {ZERO_ADDRESS, ONE_DAY, ONE_YEAR,} from "../utils/Constants";
 import ScaledAmount, {TWO_HUNDRED_THOUSAND, ZERO} from "../utils/ScaledAmount";
 import BlockchainUtils from "../utils/BlockchainUtils";
+import { Block } from "ethers";
+import TimeForwarder from "../utils/TimeForwarder";
 
 
 describe("Withdraw flow", function() {
@@ -38,13 +40,18 @@ describe("Withdraw flow", function() {
             await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND.toString());
             // simulate another deposit so that we can pay back the alice's deposit with interests
             await actors.borrowedTokenFaucet.transferTokens(actors.vitoTheLender.getAddress(), TWO_HUNDRED_THOUSAND);
-            await actors.vitoTheLender.deposit(TWO_HUNDRED_THOUSAND, ONE_DAY);
+            await TimeForwarder.getInstance().forwardTime(ONE_DAY);
+            await actors.vitoTheLender.deposit(TWO_HUNDRED_THOUSAND);
 
-            await expect(actors.aliceTheLender.withdrawAll(ONE_YEAR))
+            await TimeForwarder.getInstance().forwardTime(ONE_YEAR);
+            const estimatedInterests = await actors.aliceTheLender.estimateTotalEarned();
+            expect(estimatedInterests).to.be.equal(ScaledAmount.of("212911.958258879590400000").value());    
+
+            await expect(actors.aliceTheLender.withdrawAll())
             .to.emit(registry.pool, "FundsWithdrawn")
                 .withArgs(
                     actors.aliceTheLender.getAddress(), // depositor
-                    ScaledAmount.of("212911.958258879590400000").value(), // deposit amount with interests
+                    estimatedInterests, // deposit amount with interests
                     ScaledAmount.of("187088.041741120409600000").value(), // total liquidty: initial liquidity - deposit amount with interests
                     ZERO.toString(), // total borrows                 
                     ZERO.toString() // utilization rate
@@ -58,7 +65,7 @@ describe("Withdraw flow", function() {
             .to.emit(registry.ibToken, "Transfer")
                 .withArgs(actors.aliceTheLender.getAddress(), ZERO_ADDRESS, TWO_HUNDRED_THOUSAND)                
             .to.emit(registry.borrowedToken, "Transfer")
-                .withArgs(registry.poolAddress, actors.aliceTheLender.getAddress(), ScaledAmount.of("212911.958258879590400000").value())
+                .withArgs(registry.poolAddress, actors.aliceTheLender.getAddress(), estimatedInterests)
             expect(await registry.debtToken.getDebtIndex())
             .to.be
                 .equal(await registry.debtToken.getInitialDebtIndex(), "The debt token index must be equal to the initial debt index")                
@@ -67,8 +74,9 @@ describe("Withdraw flow", function() {
         it ("Should reject the withdrawal to Alice if there is not enough funds to cover the withdrawal", async function () {
 
             await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND);
+            await TimeForwarder.getInstance().forwardTime(ONE_YEAR);
 
-            await expect(actors.aliceTheLender.withdrawAll(ONE_YEAR))
+            await expect(actors.aliceTheLender.withdrawAll())
             .to.be
                 .revertedWith("The amount of token and interests cannot be withdrawn, because of insufficient liquidity")
 

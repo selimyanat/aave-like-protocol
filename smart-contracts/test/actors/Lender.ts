@@ -19,13 +19,6 @@ export default class Lender {
         return await registry.borrowedToken.balanceOf(this.account.getAddress());
     }
 
-    // TODO REMOVE ME, This method is not used in the test
-    async approveTokenTransferTo(toAddress: string, amount: string): Promise<void> {
-        const registry = await ContractRegistry.getInstance();
-        const connect = registry.borrowedToken.connect(this.account);
-        await connect.approve(toAddress, amount);        
-    }
-
     async deposit(amount: string, days?: number): Promise<ContractTransactionResponse> {
 
         const registry = await ContractRegistry.getInstance();
@@ -53,9 +46,20 @@ export default class Lender {
         return await connectToPool.withdraw()
     }
 
+    async estimateTotalEarned(days?: number): Promise<string> {
+        const registry = await ContractRegistry.getInstance();
+        // simulate time passing to update the interest rate
+        if (days !== undefined) {
+            const seconds = days * 24 * 60 * 60;
+            await registry.ibToken.setMockTimestamp(seconds);
+            await registry.debtToken.setMockTimestamp(seconds);
+        }   
+        return (await registry.ibToken.estimateTotalEarned(this.getAddress())).toString();
+    }
+
     async getIBTokenBalance(): Promise<BigInt> {
         const registry = await ContractRegistry.getInstance();
-        return registry.ibToken.balanceOf(this.getAddress());
+        return await registry.ibToken.balanceOf(this.getAddress());
     }
 
     public getAddress(): string {

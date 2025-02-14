@@ -88,6 +88,7 @@ abstract contract AbstractDebtToken is ERC20 {
      */
     function recalculateDebtIndex() external returns (uint) {
         uint timeElapsed = getElapsedTime();
+        // linear growth
         uint accruedInterest = (borrowingRate.getBorrowingRate() * timeElapsed) / ONE_YEAR;
         debtIndex = debtIndex + accruedInterest;
         lastUpdateTimestamp = block.timestamp;
@@ -101,10 +102,10 @@ abstract contract AbstractDebtToken is ERC20 {
     * @return The estimated total debt owed in real-time.
     */
     function estimateTotalDebtOwed(address borrower) public view returns (uint) {
-        uint borrowerDebt = balanceOf(borrower);
-        uint borrowerDebtIndexAtBorrowing = borrowerDebtIndex[borrower];
 
+        uint borrowerDebt = balanceOf(borrower);
         require(borrowerDebt > 0, "No outstanding debt for this borrower");
+        uint borrowerDebtIndexAtBorrowing = borrowerDebtIndex[borrower];        
         require(borrowerDebtIndexAtBorrowing > 0, "Borrower debt index not found");
 
         // Calculate estimated interest accrued since last update
@@ -130,6 +131,7 @@ abstract contract AbstractDebtToken is ERC20 {
         uint borrowerDebtIndexAtBorrowing = borrowerDebtIndex[borrower];
         require(borrowerDebtIndexAtBorrowing > 0, "Borrower debt index not found");
 
+        // Calculate estimated total debt owed by borrower
         return borrowerDebt * debtIndex / borrowerDebtIndex[borrower];
     }
 

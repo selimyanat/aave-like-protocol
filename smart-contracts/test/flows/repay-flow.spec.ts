@@ -5,6 +5,7 @@ import TestActorsRegistry from "../actors/TestActorsRegistry";
 import {ZERO_ADDRESS, ONE_YEAR, ONE_DAY} from "../utils/Constants";
 import ScaledAmount, {TWO_HUNDRED_THOUSAND, ZERO, ONE_HUNDRED_THOUSAND, ONE_THOUSAND, TWO_THOUSAND, ONE, TEN_THOUSAND} from "../utils/ScaledAmount";
 import BlockchainUtils from "../utils/BlockchainUtils";
+import TimeForwarder from "../utils/TimeForwarder";
 
 
 describe("Repay flow", function() { 
@@ -22,7 +23,8 @@ describe("Repay flow", function() {
         
         await actors.collateralTokenFaucet.transferTokens(actors.bobTheBorrower.getAddress(), TEN_THOUSAND);        
         await actors.borrowedTokenFaucet.transferTokens(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND);
-        await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND, ONE_DAY)        
+        await TimeForwarder.getInstance().forwardTime(ONE_DAY);
+        await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND)        
         await actors.bobTheBorrower.borrow(ONE_THOUSAND, ONE);
                 
         blokchainStateId = await BlockchainUtils.saveState()
@@ -39,7 +41,8 @@ describe("Repay flow", function() {
 
         it ("Should reject the repay if the amount of token is less than the borrowed amount", async function(){
 
-            await expect(actors.bobTheBorrower.repayAll(ONE_HUNDRED_THOUSAND, ONE_YEAR))
+            await TimeForwarder.getInstance().forwardTime(ONE_YEAR);
+            await expect(actors.bobTheBorrower.repayAll(ONE_HUNDRED_THOUSAND))
             .to.be
                 .revertedWith("The amount of token to repay the debt must be equal to borrowed amount including the interests")
         })
@@ -48,11 +51,14 @@ describe("Repay flow", function() {
 
             await actors.borrowedTokenFaucet.transferTokens(actors.bobTheBorrower.getAddress(), TWO_THOUSAND.toString());
 
-            const expectedBobDebtToRepayWithInterest = ScaledAmount.of("1080.939726027397259000").value();
+            await TimeForwarder.getInstance().forwardTime(ONE_YEAR);
+            const estimateTotalDebt = await actors.bobTheBorrower.estimateTotalDebt();            
+            expect(estimateTotalDebt).to.be.equal(ScaledAmount.of("1080.939726027397259000").value());
             const expectedNetDebtPaymentAfterFee = ScaledAmount.of("1064.795616438356163200").value();
             const bobDebtTokenBalanceBeforeRepay = await actors.bobTheBorrower.getDebtTokenBalance();
-
-            const txResponse = await actors.bobTheBorrower.repayAll(expectedBobDebtToRepayWithInterest, ONE_YEAR);
+            
+            
+            const txResponse = await actors.bobTheBorrower.repayAll(estimateTotalDebt);
             await expect(txResponse)
                 .to.emit(registry.pool, "Repayment")
                         .withArgs(
@@ -65,7 +71,7 @@ describe("Repay flow", function() {
                 .to.emit(registry.debtToken, "Transfer")    
                     .withArgs(actors.bobTheBorrower.getAddress(), ZERO_ADDRESS, bobDebtTokenBalanceBeforeRepay)
                 .to.emit(registry.borrowedToken, "Transfer")
-                    .withArgs(actors.bobTheBorrower.getAddress(), registry.poolAddress, expectedBobDebtToRepayWithInterest)
+                    .withArgs(actors.bobTheBorrower.getAddress(), registry.poolAddress, estimateTotalDebt)
                 .to.emit(registry.collateralToken, "Transfer")
                     .withArgs(registry.poolAddress, actors.bobTheBorrower.getAddress(), ONE)
                 .to.emit(registry.borrowingRate, "BorrowingRateUpdated")                
