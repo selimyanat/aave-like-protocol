@@ -31,6 +31,7 @@ describe("Withdraw flow", function() {
         await BlockchainUtils.rollbackStateTo(blokchainStateId);
         await ContractRegistry.resetInstance();
         await TestActorsRegistry.resetInstance();
+        await TimeForwarder.resetInstance();
     })
 
     describe("When Alice withdraw her tokens", async function() {
@@ -45,14 +46,14 @@ describe("Withdraw flow", function() {
 
             await TimeForwarder.getInstance().forwardTime(ONE_YEAR);
             const estimatedInterests = await actors.aliceTheLender.estimateTotalEarned();
-            expect(estimatedInterests).to.be.equal(ScaledAmount.of("212911.958258879590400000").value());    
+            expect(estimatedInterests).to.be.equal(ScaledAmount.of("212947.045202253182600000").value());    
 
             await expect(actors.aliceTheLender.withdrawAll())
             .to.emit(registry.pool, "FundsWithdrawn")
                 .withArgs(
                     actors.aliceTheLender.getAddress(), // depositor
                     estimatedInterests, // deposit amount with interests
-                    ScaledAmount.of("187088.041741120409600000").value(), // total liquidty: initial liquidity - deposit amount with interests
+                    ScaledAmount.of("187052.954797746817400000").value(), // total liquidty: initial liquidity - deposit amount with interests
                     ZERO.toString(), // total borrows                 
                     ZERO.toString() // utilization rate
             )
@@ -61,7 +62,7 @@ describe("Withdraw flow", function() {
             .to.emit(registry.lendingRate, "LendingRateUpdated")
                 .withArgs(ScaledAmount.of("0.064").value())
             .to.emit(registry.ibToken, "ExchangeRateUpdated")
-                .withArgs(ScaledAmount.of("1.132691617937239420").value())                                
+                .withArgs(ScaledAmount.of("1.133064973775890275").value())                                
             .to.emit(registry.ibToken, "Transfer")
                 .withArgs(actors.aliceTheLender.getAddress(), ZERO_ADDRESS, TWO_HUNDRED_THOUSAND)                
             .to.emit(registry.borrowedToken, "Transfer")

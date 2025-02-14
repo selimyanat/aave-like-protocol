@@ -33,6 +33,7 @@ describe("Borrow flow", function() {
         await BlockchainUtils.rollbackStateTo(blokchainStateId);
         await ContractRegistry.resetInstance();
         await TestActorsRegistry.resetInstance();
+        await TimeForwarder.resetInstance();
     })
 
     describe("When Bob attempts to borrow tokens", async function() {

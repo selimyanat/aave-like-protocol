@@ -34,6 +34,7 @@ describe("Repay flow", function() {
         await BlockchainUtils.rollbackStateTo(blokchainStateId);
         await ContractRegistry.resetInstance();
         await TestActorsRegistry.resetInstance();
+        await TimeForwarder.resetInstance();
     })
 
     describe("When Bob repays its loan", async function() {
@@ -53,8 +54,8 @@ describe("Repay flow", function() {
 
             await TimeForwarder.getInstance().forwardTime(ONE_YEAR);
             const estimateTotalDebt = await actors.bobTheBorrower.estimateTotalDebt();            
-            expect(estimateTotalDebt).to.be.equal(ScaledAmount.of("1080.939726027397259000").value());
-            const expectedNetDebtPaymentAfterFee = ScaledAmount.of("1064.795616438356163200").value();
+            expect(estimateTotalDebt).to.be.equal(ScaledAmount.of("1081.160273972602738000").value());
+            const expectedNetDebtPaymentAfterFee = ScaledAmount.of("1064.972054794520546400").value();
             const bobDebtTokenBalanceBeforeRepay = await actors.bobTheBorrower.getDebtTokenBalance();
             
             
@@ -65,7 +66,7 @@ describe("Repay flow", function() {
                             actors.bobTheBorrower.getAddress(),  // borrower
                             expectedNetDebtPaymentAfterFee,  // amount of token borrowed with interests
                             ONE, // collateral
-                            ScaledAmount.of("200064.795616438356163200").value(), // total liquidity
+                            ScaledAmount.of("200064.972054794520546400").value(), // total liquidity
                             ZERO, // total borrowed
                             ZERO) // utilization rate                  
                 .to.emit(registry.debtToken, "Transfer")    
@@ -79,17 +80,17 @@ describe("Repay flow", function() {
                 .to.emit(registry.lendingRate, "LendingRateUpdated")                
                     .withArgs(ScaledAmount.of("0.0640").value())                                        
                 .to.emit(registry.debtToken, "DebtIndexUpdated")                
-                    .withArgs(ScaledAmount.of("1.160939726027397259").value())                    
+                    .withArgs(ScaledAmount.of("1.161379452054794518").value())                    
                 .to.emit(registry.ibToken, "ExchangeRateUpdated")                
-                    .withArgs(ScaledAmount.of("1.064186564383561643").value())                
+                    .withArgs(ScaledAmount.of("1.064361937594295363").value())                
                 .to.emit(registry.protocolReserve, "BorrowedTokenFeeCollected")
                     .withArgs(
                         registry.poolAddress, // pool
-                        ScaledAmount.of("16.144109589041095800").value()) // fee
+                        ScaledAmount.of("16.188219178082191600").value()) // fee
                 .to.emit(registry.borrowedToken, "Transfer")
                     .withArgs(registry.poolAddress, 
                         registry.protocolReserveAddress, 
-                        ScaledAmount.of("16.144109589041095800").value())
+                        ScaledAmount.of("16.188219178082191600").value())
                                                             
                 // Charles now wants to get the fee from the protocol reserve                
                 await expect(actors.charlesTheProtocolAdmin.sendFundsFromReserve(actors.charlesTheProtocolAdmin.getAddress(), ScaledAmount.of("16.144109589041095800").value() ))

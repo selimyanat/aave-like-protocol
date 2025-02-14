@@ -36,6 +36,7 @@ describe("Liquidation flow", function() {
         await BlockchainUtils.rollbackStateTo(blokchainStateId);
         await ContractRegistry.resetInstance();
         await TestActorsRegistry.resetInstance();
+        await TimeForwarder.resetInstance();
     })
 
     describe("When Greg liquidates Bob's position", async function() {
