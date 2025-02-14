@@ -5,6 +5,7 @@ import TestActorsRegistry from "../actors/TestActorsRegistry";
 import {ZERO_ADDRESS, ONE_DAY} from "../utils/Constants";
 import ScaledAmount, {TWO_HUNDRED_THOUSAND, FOUR_HUNDRED_THOUSAND, ZERO, ONE_THOUSAND, ONE, FIVE_HUNDRED, TEN_THOUSAND} from "../utils/ScaledAmount";
 import BlockchainUtils from "../utils/BlockchainUtils";
+import TimeForwarder from "../utils/TimeForwarder";
 
 
 describe("Liquidation flow", function() { 
@@ -24,7 +25,8 @@ describe("Liquidation flow", function() {
         await actors.borrowedTokenFaucet.transferTokens(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND);
         await actors.borrowedTokenFaucet.transferTokens(actors.gregTheLiquidator.getAddress(), FOUR_HUNDRED_THOUSAND);
         
-        await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND, ONE_DAY)        
+        await TimeForwarder.getInstance().forwardTime(ONE_DAY);
+        await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND)
         await actors.bobTheBorrower.borrow(ONE_THOUSAND, ONE);
                     
         blokchainStateId = await BlockchainUtils.saveState()
