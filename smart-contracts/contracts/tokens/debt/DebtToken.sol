@@ -18,8 +18,8 @@ contract DebtToken is AbstractDebtToken {
      * @param symbol The symbol of the debt token.
      * @param _debtIndex The initial debt index for the token.
      */
-    constructor(string memory name, string memory symbol, uint _debtIndex)
-        AbstractDebtToken(name, symbol, _debtIndex)
+    constructor(string memory name, string memory symbol, uint _debtIndex, address _borrowingRate)
+        AbstractDebtToken(name, symbol, _debtIndex, _borrowingRate)
     {
     }
 

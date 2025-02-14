@@ -5,6 +5,7 @@ import TestActorsRegistry from "../actors/TestActorsRegistry";
 import {ZERO_ADDRESS, ONE_DAY } from "../utils/Constants";
 import ScaledAmount, {TWO_HUNDRED_THOUSAND, FOUR_HUNDRED_THOUSAND, ZERO, ONE_THOUSAND, TWO_THOUSAND, ONE, TEN_THOUSAND} from "../utils/ScaledAmount";
 import BlockchainUtils from "../utils/BlockchainUtils";
+import TimeForwarder from "../utils/TimeForwarder";
 
 
 describe("Borrow flow", function() {
@@ -22,7 +23,8 @@ describe("Borrow flow", function() {
         
         await actors.collateralTokenFaucet.transferTokens(actors.bobTheBorrower.getAddress(), TEN_THOUSAND);
         await actors.borrowedTokenFaucet.transferTokens(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND);
-        await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND, ONE_DAY)
+        await TimeForwarder.getInstance().forwardTime(ONE_DAY);
+        await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND)
         
         blokchainStateId = await BlockchainUtils.saveState()
     })
@@ -31,6 +33,7 @@ describe("Borrow flow", function() {
         await BlockchainUtils.rollbackStateTo(blokchainStateId);
         await ContractRegistry.resetInstance();
         await TestActorsRegistry.resetInstance();
+        await TimeForwarder.resetInstance();
     })
 
     describe("When Bob attempts to borrow tokens", async function() {

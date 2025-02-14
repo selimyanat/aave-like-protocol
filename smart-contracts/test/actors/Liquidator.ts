@@ -19,14 +19,8 @@ export default class Liquidator {
         return await registry.borrowedToken.balanceOf(this.account.getAddress());
     }
 
-    async liquidate(borrower: string, amount: string, days?: number): Promise<TransactionResponse> {
+    async liquidate(borrower: string, amount: string): Promise<TransactionResponse> {
         const registry = await ContractRegistry.getInstance();
-        // simulate time passing to update the interest rate
-        if (days !== undefined) {
-            const seconds = days * 24 * 60 * 60;
-            await registry.ibToken.setMockTimestamp(seconds);
-            await registry.ibToken.setMockTimestamp(seconds);
-        }
         const connectToBorrowedToken = registry.borrowedToken.connect(this.account);
         await connectToBorrowedToken.approve(registry.poolAddress, amount);
         const connect = registry.pool.connect(this.account);

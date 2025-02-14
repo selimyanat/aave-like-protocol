@@ -3,6 +3,7 @@ pragma solidity ^0.8.2;
 
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "../../rates/BorrowingRate.sol";
 
 /**
  * @title AbstractDebtToken
@@ -16,6 +17,9 @@ abstract contract AbstractDebtToken is ERC20 {
 
     /// @notice Number of seconds in one year, used for interest calculations.
     uint public constant ONE_YEAR = 365 days;
+
+    /// @notice The contract managing the borrowing rate for borrowers.
+    BorrowingRate public borrowingRate;
 
     /// @notice Current debt index, which tracks cumulative interest accrued over time.
     uint public debtIndex;
@@ -40,11 +44,12 @@ abstract contract AbstractDebtToken is ERC20 {
      * @param symbol The symbol of the debt token.
      * @param _debtIndex The initial value of the debt index.
      */
-    constructor(string memory name, string memory symbol, uint _debtIndex) ERC20(name, symbol) {
+    constructor(string memory name, string memory symbol, uint _debtIndex, address _borrowingRate) ERC20(name, symbol) {
         // TODO should start at 1e18 and increase over time as interest accrues
         initialDebtIndex = _debtIndex;
         debtIndex = _debtIndex;
         lastUpdateTimestamp = block.timestamp;
+        borrowingRate = BorrowingRate(_borrowingRate);
     }
     
     /**
@@ -79,16 +84,63 @@ abstract contract AbstractDebtToken is ERC20 {
      * @notice Recalculates the debt index based on the borrowing rate and elapsed time.
      * @dev The debt index is updated to account for accrued interest over the elapsed time.
      * Emits a `DebtIndexUpdated` event.
-     * @param borrowingRate The current borrowing rate, scaled by `DECIMALS`.
      * @return The updated debt index.
      */
-    function recalculateDebtIndex(uint borrowingRate) external returns (uint) {
+    function recalculateDebtIndex() external returns (uint) {
         uint timeElapsed = getElapsedTime();
-        uint accruedInterest = (borrowingRate * timeElapsed) / ONE_YEAR;
+        // linear growth
+        uint accruedInterest = (borrowingRate.getBorrowingRate() * timeElapsed) / ONE_YEAR;
         debtIndex = debtIndex + accruedInterest;
         lastUpdateTimestamp = block.timestamp;
         emit DebtIndexUpdated(debtIndex);
         return debtIndex;
+    }
+
+    /**
+    * @dev Estimates the borrower's total debt, including real-time accrued interest.
+    * @param borrower The address of the borrower.
+    * @return The estimated total debt owed in real-time.
+    */
+    function estimateTotalDebtOwed(address borrower) public view returns (uint) {
+
+        uint borrowerDebt = balanceOf(borrower);
+        require(borrowerDebt > 0, "No outstanding debt for this borrower");
+        uint borrowerDebtIndexAtBorrowing = borrowerDebtIndex[borrower];        
+        require(borrowerDebtIndexAtBorrowing > 0, "Borrower debt index not found");
+
+        // Calculate estimated interest accrued since last update
+        uint timeElapsed = getElapsedTime();
+        uint estimatedInterestAccrued = (borrowingRate.getBorrowingRate() * timeElapsed) / ONE_YEAR;
+
+        // Estimate current debt index including accrued interest
+        uint estimatedDebtIndex = debtIndex + estimatedInterestAccrued;
+
+        // Calculate estimated total debt owed by borrower
+        return (borrowerDebt * estimatedDebtIndex) / borrowerDebtIndexAtBorrowing;
+    }
+
+    /**
+     * @notice Retrieves the total debt owed by a borrower, including real-time accrued interest.
+     * @param borrower The address of the borrower.
+     * @return The total debt owed by the borrower, including real-time accrued interest.
+     */
+    function getTotalDebtOwed(address borrower) external view returns (uint) {
+
+        uint borrowerDebt = balanceOf(borrower);
+        require(borrowerDebt > 0, "No outstanding debt for this borrower");
+        uint borrowerDebtIndexAtBorrowing = borrowerDebtIndex[borrower];
+        require(borrowerDebtIndexAtBorrowing > 0, "Borrower debt index not found");
+
+        // Calculate estimated total debt owed by borrower
+        return borrowerDebt * debtIndex / borrowerDebtIndex[borrower];
+    }
+
+    /**
+     * @notice Retrieves the principal debt of a borrower.
+     * @param borrower The address of the borrower.
+     */
+    function getPrincipalDebt(address borrower) public view returns (uint) {        
+        return balanceOf(borrower) * DECIMALS / this.getDebtIndexAtBorrowing(borrower);
     }
 
     /**
@@ -137,15 +189,5 @@ abstract contract AbstractDebtToken is ERC20 {
      */
     function getDebtIndexAtBorrowing(address borrower) public view returns (uint) {
         return borrowerDebtIndex[borrower];
-    }
-
-    /**
-     * @dev Retrieves the balance of a user in terms of the underlying asset.
-     * @param account The address of the Debt token holder.
-     * @return The balance of the user in terms of the underlying asset.
-     */
-    function balanceOfUnderlying(address account) public view returns (uint) {
-
-        return (balanceOf(account) * debtIndex) / DECIMALS;
     }
 }

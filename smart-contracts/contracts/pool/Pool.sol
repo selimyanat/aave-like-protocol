@@ -124,7 +124,7 @@ contract Pool is ReentrancyGuard {
 
         // Calculate the amount of IBTokens to mint
         // Get fresh exchange rate, as we only update the exchange rat when the lender deposits, withdraws or during liquidation
-        ibToken.recalculateExchangeRate(lendingRate.getLendingRate());
+        ibToken.recalculateExchangeRate();
         uint exchangeRate = ibToken.getExchangeRate();
         uint ibTokenAllocation = amount * exchangeRate / DECIMALS;
 
@@ -135,8 +135,8 @@ contract Pool is ReentrancyGuard {
         // Update the rates
         uint utilizationRate = getUtilizationRate();
         uint newBorrowingRate = borrowingRate.recalculateBorrowingRate(utilizationRate);
-        uint newLendingRate = lendingRate.recalculateLendingRate(newBorrowingRate);
-        ibToken.recalculateExchangeRate(newLendingRate);
+        lendingRate.recalculateLendingRate(newBorrowingRate);
+        ibToken.recalculateExchangeRate();
         
         emit DepositAdded(msg.sender, address(borrowedToken), amount, totalLiquidity, totalBorrows, utilizationRate);
     }
@@ -151,16 +151,16 @@ contract Pool is ReentrancyGuard {
 
         // Calculate the amount to be withdrawn: deposit + interest
         // Get fresh exchange rate, as we only update the exchange rat when the lender deposits, withdraws or during liquidation
-        ibToken.recalculateExchangeRate(lendingRate.getLendingRate());
-        uint depositWithInterests = (ibTokenBalance * ibToken.getExchangeRate()) / ibToken.getLenderExchangeRateAtLending(msg.sender);
+        ibToken.recalculateExchangeRate();
+        uint depositWithInterests = ibToken.getTotalEarned(msg.sender);
         require(totalLiquidity >= depositWithInterests, "The amount of token and interests cannot be withdrawn, because of insufficient liquidity");
         totalLiquidity -= depositWithInterests;
 
         // Udpate the rates
         uint utilizationRate = getUtilizationRate();
         uint newBorrowingRate = borrowingRate.recalculateBorrowingRate(utilizationRate);
-        uint newlendingRate = lendingRate.recalculateLendingRate(newBorrowingRate);
-        ibToken.recalculateExchangeRate(newlendingRate);
+        lendingRate.recalculateLendingRate(newBorrowingRate);
+        ibToken.recalculateExchangeRate();
 
         // Make the transfer(s)
         SafeERC20.safeTransfer(borrowedToken, msg.sender, depositWithInterests);
@@ -193,7 +193,7 @@ contract Pool is ReentrancyGuard {
         
         // Make the transfer(s)
         // Get fresh debt token index, as we only update the debt index when the borrower borrows, repays or get liquidated
-        debtToken.recalculateDebtIndex(borrowingRate.getBorrowingRate());
+        debtToken.recalculateDebtIndex();
         uint debtTokenAllocation = (amountOfBorrowedToken * debtToken.getDebtIndex()) / DECIMALS; 
         
         SafeERC20.safeTransferFrom(collateralToken, msg.sender, address(this), amountOfCollateralToken);
@@ -204,7 +204,7 @@ contract Pool is ReentrancyGuard {
         uint utilizationRate = getUtilizationRate();
         uint newBorrowingRate = borrowingRate.recalculateBorrowingRate(utilizationRate);        
         lendingRate.recalculateLendingRate(newBorrowingRate);
-        debtToken.recalculateDebtIndex(newBorrowingRate);   
+        debtToken.recalculateDebtIndex();   
 
         emit Borrowing(msg.sender, amountOfBorrowedToken, totalLiquidity, totalBorrows, utilizationRate);
     }
@@ -220,24 +220,26 @@ contract Pool is ReentrancyGuard {
         uint debtTokenBalance = debtToken.balanceOf(msg.sender);
         require(debtTokenBalance > 0, "The borrower has no debt to repay");
                 
-        uint borrowedPrincipalAmount = (debtTokenBalance * DECIMALS) / debtToken.getDebtIndexAtBorrowing(msg.sender);
+        uint borrowedPrincipalAmount = debtToken.getPrincipalDebt(msg.sender);
+        // If bob borrowed 1 borrowed token, he must repay debt token / debt index at borrowing (equivalent to the number of borrowed token when bob
+        // borrowed)
         totalBorrows -= borrowedPrincipalAmount;
 
         // Get fresh debt token index, as we only update the debt index when the borrower borrows, repays or get liquidated
-        debtToken.recalculateDebtIndex(borrowingRate.getBorrowingRate()); 
-        uint repaymentAmountWithInterest = (debtTokenBalance * debtToken.getDebtIndex()) / debtToken.getDebtIndexAtBorrowing(msg.sender); 
-        uint accruedInterest = repaymentAmountWithInterest - debtTokenBalance;        
+        debtToken.recalculateDebtIndex(); 
+        uint totalDebtOwned = debtToken.getTotalDebtOwed(msg.sender);
+
+        uint accruedInterest = totalDebtOwned - debtTokenBalance;
         uint protocolFee = (accruedInterest * lendingRate.reserveFactor()) / DECIMALS;        
-        uint netRepayment = repaymentAmountWithInterest - protocolFee;
+        uint netRepayment = totalDebtOwned - protocolFee;
         totalLiquidity += netRepayment;
         uint collateralToReturn = collateralBalances[msg.sender]; 
         collateralBalances[msg.sender] = 0; 
                
-        // Make the transfer(s)        
+        // Make the transfer(s)
         uint allowance = borrowedToken.allowance(msg.sender, address(this));
-        require(repaymentAmountWithInterest == allowance, "The amount of token to repay the debt must be equal to borrowed amount including the interests");
-        SafeERC20.safeTransferFrom(borrowedToken, msg.sender, address(this), repaymentAmountWithInterest);
-        // TODO safeApprove is deprecated, replace it
+        require(totalDebtOwned == allowance, "The amount of token to repay the debt must be equal to borrowed amount including the interests");
+        SafeERC20.safeTransferFrom(borrowedToken, msg.sender, address(this), totalDebtOwned);
         SafeERC20.safeApprove(borrowedToken, address(protocolReserve), protocolFee);
         protocolReserve.collectBorrowedTokenFee(protocolFee);
         debtToken.burn(msg.sender, debtTokenBalance);
@@ -248,9 +250,9 @@ contract Pool is ReentrancyGuard {
         // Udpate the rates
         uint utilizationRate = getUtilizationRate();
         uint newBorrowingRate = borrowingRate.recalculateBorrowingRate(utilizationRate);
-        uint newLendingRate = lendingRate.recalculateLendingRate(newBorrowingRate);
-        debtToken.recalculateDebtIndex(newBorrowingRate);
-        ibToken.recalculateExchangeRate(newLendingRate);
+        lendingRate.recalculateLendingRate(newBorrowingRate);
+        debtToken.recalculateDebtIndex();
+        ibToken.recalculateExchangeRate();
 
         emit Repayment(msg.sender, netRepayment, collateralToReturn, totalLiquidity, totalBorrows, utilizationRate);        
     }
@@ -273,12 +275,12 @@ contract Pool is ReentrancyGuard {
         uint healthFactor = getHealthFactor(borrower, collateralPrice);
         require(healthFactor < SAFE_HEALTH_FACTOR, "The borrower is not liquidatable, because the health factor is safe");
 
-        uint borrowedPrincipalAmount = (borrowerDebtBalance * DECIMALS) / debtToken.getDebtIndexAtBorrowing(borrower);
+        uint borrowedPrincipalAmount = debtToken.getPrincipalDebt(borrower);
         totalBorrows -= borrowedPrincipalAmount;
 
         // Get fresh debt token index, as we only update the debt index when the borrower borrows, repays or get liquidated
-        debtToken.recalculateDebtIndex(borrowingRate.getBorrowingRate()); 
-        uint repaymentAmountWithInterest = (borrowerDebtBalance * debtToken.getDebtIndex()) / debtToken.getDebtIndexAtBorrowing(borrower); 
+        debtToken.recalculateDebtIndex(); 
+        uint repaymentAmountWithInterest = debtToken.getTotalDebtOwed(borrower);
         totalLiquidity += repaymentAmountWithInterest;
         uint collateralToSeize = collateralBalances[borrower]; 
         collateralBalances[borrower] = 0; 
@@ -289,20 +291,19 @@ contract Pool is ReentrancyGuard {
         // Make the transfer(s)        
         uint allowance = borrowedToken.allowance(msg.sender, address(this));
         require(repaymentAmountWithInterest == allowance, "The amount of token to repay the debt must be equal to borrowed amount including the interests");
-        SafeERC20.safeTransferFrom(borrowedToken, msg.sender, address(this), repaymentAmountWithInterest);
-        debtToken.burn(borrower, borrowerDebtBalance);    
-        
+        SafeERC20.safeTransferFrom(borrowedToken, msg.sender, address(this), repaymentAmountWithInterest);                
         SafeERC20.safeTransfer(collateralToken, msg.sender, liquidatorReward);        
         if (remainingCollateral > 0) {
             SafeERC20.safeTransfer(collateralToken, borrower, remainingCollateral);
         }
+        debtToken.burn(borrower, borrowerDebtBalance);    
 
        // Udpate the rates
         uint utilizationRate = getUtilizationRate();
         uint newBorrowingRate = borrowingRate.recalculateBorrowingRate(utilizationRate);
-        uint newLendingRate = lendingRate.recalculateLendingRate(newBorrowingRate);
-        debtToken.recalculateDebtIndex(newBorrowingRate);
-        ibToken.recalculateExchangeRate(newLendingRate);
+        lendingRate.recalculateLendingRate(newBorrowingRate);
+        debtToken.recalculateDebtIndex();
+        ibToken.recalculateExchangeRate();
         emit Liquidation(borrower, msg.sender, repaymentAmountWithInterest, liquidatorReward, remainingCollateral, totalLiquidity, totalBorrows, utilizationRate);
     }
     

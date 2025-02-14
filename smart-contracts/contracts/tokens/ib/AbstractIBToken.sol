@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "hardhat/console.sol";
+import "../../rates/LendingRate.sol";
 
 /**
  * @title AbstractIBToken
@@ -9,6 +9,8 @@ import "hardhat/console.sol";
  * The IBToken reflects the yield distribution implicitly through an increasing exchange rate, ensuring that
  * lenders' balances automatically reflect their share of the pool's growth without explicit yield distribution.
  */
+import "hardhat/console.sol";
+
 abstract contract AbstractIBToken is ERC20 {
 
     /// @notice Decimal precision used for fixed-point calculations (1e18).
@@ -16,6 +18,9 @@ abstract contract AbstractIBToken is ERC20 {
 
     /// @notice Number of seconds in one year, used for annualized interest calculations.
     uint public constant ONE_YEAR = 365 days;
+
+    /// @notice The contract managing the lending rate for depositors.
+    LendingRate public lendingRate;
 
     /// @notice Current exchange rate of the IBToken in terms of the underlying asset.
     /// @dev Reflects the accrued interest and pool growth.
@@ -39,11 +44,13 @@ abstract contract AbstractIBToken is ERC20 {
      * @param name The name of the IBToken.
      * @param symbol The symbol of the IBToken.
      * @param _exchangeRate The initial exchange rate of the IBToken in terms of the underlying asset.
+     * @param _lendingRate The address of the LendingRate contract managing the lending rate.
      */
-    constructor(string memory name, string memory symbol, uint _exchangeRate) ERC20(name, symbol) {
+    constructor(string memory name, string memory symbol, uint _exchangeRate, address _lendingRate) ERC20(name, symbol) {
         initialExchangeRate = _exchangeRate;
         exchangeRate = _exchangeRate;
         lastUpdateTimestamp = block.timestamp;
+        lendingRate = LendingRate(_lendingRate);
     }
 
     /**
@@ -81,17 +88,56 @@ abstract contract AbstractIBToken is ERC20 {
      *      New Exchange Rate = Current Exchange Rate × (1 + Interest Accrued)
      *      Interest Accrued = Lending Rate × Time Elapsed / ONE_YEAR
      * Emits an `ExchangeRateUpdated` event.
-     * @param lendingRate The current lending rate, scaled by `DECIMALS`.
      * @return The updated exchange rate.
      */
-    function recalculateExchangeRate(uint lendingRate) external returns (uint) {   
+    function recalculateExchangeRate() external returns (uint) {   
+
         uint timeElapsed = getElapsedTime();
-        uint accruedInterest = lendingRate * timeElapsed / ONE_YEAR;
+        uint accruedInterest = lendingRate.getLendingRate() * timeElapsed / ONE_YEAR;
         // exponential growth
         exchangeRate = (exchangeRate * (DECIMALS + accruedInterest)) / DECIMALS;
         lastUpdateTimestamp = block.timestamp;
         emit ExchangeRateUpdated(exchangeRate);
         return exchangeRate;
+    }
+
+    /**
+    * @dev Estimates the lender's total earned, including real-time accrued interest.
+    * @param lender The address of the lender.
+    * @return The estimated total earned in real-time.
+    */
+    function estimateTotalEarned(address lender) public view returns (uint) {
+
+        uint lenderDeposit = balanceOf(lender);
+        require(lenderDeposit > 0, "No outstanding deposit for this lender");
+        uint lenderExchangeRateAtDeposit = lenderExchangeRate[lender];
+        require(lenderExchangeRateAtDeposit > 0, "Lender deposit exchange rate not found");
+
+        // Calculate estimated interest accrued since last update
+        uint timeElapsed = getElapsedTime();
+        uint estimatedInterestAccrued = lendingRate.getLendingRate() * timeElapsed / ONE_YEAR;
+
+        // Estimate current exchange rate including accrued interest - exponential growth
+        uint estimatedExchangeRate = (exchangeRate * (DECIMALS + estimatedInterestAccrued)) / DECIMALS;
+
+        // Calculate estimated total earned by lender
+        return (lenderDeposit * estimatedExchangeRate) / lenderExchangeRateAtDeposit;
+    }
+
+    /**
+     * @notice Retrieves the total earned by a lender, including real-time accrued interest.
+     * @param lender The address of the lender.
+     * @return The total earned by the lender, including real-time accrued interest.
+     */
+    function getTotalEarned(address lender) external view returns (uint) {  
+
+        uint lenderDeposit = balanceOf(lender);
+        require(lenderDeposit > 0, "No outstanding deposit for this lender");
+        uint lenderExchangeRateAtDeposit = lenderExchangeRate[lender];
+        require(lenderExchangeRateAtDeposit > 0, "Lender deposit exchange rate not found");
+        
+        // Calculate estimated total earned by lender
+        return lenderDeposit * exchangeRate / lenderExchangeRate[lender];
     }
 
     /**
@@ -141,17 +187,4 @@ abstract contract AbstractIBToken is ERC20 {
     function getLenderExchangeRateAtLending(address lender) public view returns (uint) {
         return lenderExchangeRate[lender];
     }
-
-    /** 
-    /**
-     * Lenders can check their real balance in the underlying asset. Improves usability for wallets and UI integrations.
-
-    function balanceOfUnderlying(address account) public view returns (uint) {
-        //notice Returns the equivalent balance of the underlying asset for a given IBToken holder.
-        //param account The address of the IBToken holder.
-     //return The balance in terms of the underlying asset.
-        return (balanceOf(account) * exchangeRate) / DECIMALS;
-    }
-    */ 
-
 }
