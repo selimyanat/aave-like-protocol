@@ -2,8 +2,8 @@
 
 ## The problem: Collateral price fluctuations
 
-Imagine Alice has `5 ETH` (worth 10000$ at 2000$ per ETH). She wants to borrow `6000$ in USDC`.  
-She deposits her `5 ETH` into a DeFi lending protocol as collateral. Now, what happens if the price 
+Imagine Alice has `2 ETH` (worth 4000$ at 2000$ per ETH). She wants to borrow `1000$ in USDC`.  
+She deposits her `2 ETH` into a DeFi lending protocol as collateral. Now, what happens if the price 
 of ETH drops significantly ? 
 
 While `TradFi` also faces price fluctuations, the crypto market is extremly volatile making the occurence
