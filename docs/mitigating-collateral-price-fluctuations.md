@@ -85,7 +85,7 @@ Liquidator's profit = Collateral seized x liquidation bonus
 * **A liquidator repays the full loan 1000 USDC** of Alice’s loan.
 * In return, the liquidator receives: <pre>1000/600 x (1 + 0.1) = 1.83 ETH = 1098$</pre>
 * The liquidator's profit is: <pre> 1.83 x 0.1 = 0.183 ETH = +109$ </pre>
-* Alice was **fully liquidated** and here **remaining collateral** is: 2 - 1.83 = 0.17 ETH. 
+* Alice was **liquidated** and the **collateral returned** to here is: 2 - 1.83 = 0.17 ETH. 
 
 > [!NOTE]  
 > In most DeFi protocols, liquidators can repay the full loan or a portion **including the
