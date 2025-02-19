@@ -18,7 +18,7 @@ rates to their lenders and borrowers by three two metrics: **Annual Percentage R
 these metrics.
 
 > [!NOTE]  
-> Aave offers interest rates that can be stable as well.
+> Aave used to offer stable interest rates but this is no longer available.
 
 
 ## Annual Percentage Rate (APR)
@@ -30,8 +30,7 @@ Here's an example to illustrate that:
 
 > [!WARNING]  
 > When a protocol advertises an APR of 10%, it is reflecting the current rate at that specific
-> moment unless it was specified as a fixed and stable rate.
-
+> moment.
 
 ## Annual Percentage Yield (APY) 
 APY is typically used for lenders,and measures the interest rate with compounding included,
@@ -46,4 +45,4 @@ turning the initial investiment into 110.25$. The extra 0.25$ comes from compoun
 
 > [!WARNING]  
 > When a protocol advertises an APY of 10%, it is reflecting the current rate at that specific
-> moment unless it was specified as a fixed and stable rate.
+> moment.

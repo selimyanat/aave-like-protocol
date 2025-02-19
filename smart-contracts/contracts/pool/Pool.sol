@@ -238,6 +238,7 @@ contract Pool is ReentrancyGuard {
                
         // Make the transfer(s)
         uint allowance = borrowedToken.allowance(msg.sender, address(this));
+        // TODO allow the liquidator to approve more than needed (allowance) as the repayment amount might change betweeh the approval and the liquidation
         require(totalDebtOwned == allowance, "The amount of token to repay the debt must be equal to borrowed amount including the interests");
         SafeERC20.safeTransferFrom(borrowedToken, msg.sender, address(this), totalDebtOwned);
         SafeERC20.safeApprove(borrowedToken, address(protocolReserve), protocolFee);
@@ -290,6 +291,7 @@ contract Pool is ReentrancyGuard {
 
         // Make the transfer(s)        
         uint allowance = borrowedToken.allowance(msg.sender, address(this));
+        // TODO allow the liquidator to approve more than needed (allowance) as the repayment amount might change betweeh the approval and the liquidation
         require(repaymentAmountWithInterest == allowance, "The amount of token to repay the debt must be equal to borrowed amount including the interests");
         SafeERC20.safeTransferFrom(borrowedToken, msg.sender, address(this), repaymentAmountWithInterest);                
         SafeERC20.safeTransfer(collateralToken, msg.sender, liquidatorReward);        
