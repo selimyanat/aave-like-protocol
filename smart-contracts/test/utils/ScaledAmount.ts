@@ -22,9 +22,12 @@ export default class ScaledAmount {
 
 export const ZERO = ScaledAmount.of("0").value()
 export const ONE = ScaledAmount.of("1").value();
+export const TWO = ScaledAmount.of("2").value();
 export const MINUS_ONE = ScaledAmount.of("-1").value();
 export const FIVE_HUNDRED = ScaledAmount.of("500").value();
+export const SIX_HUNDRED = ScaledAmount.of("600").value();
 export const ONE_THOUSAND = ScaledAmount.of("1000").value();
+export const ONE_THOUSAND_THREE_HUNDRED = ScaledAmount.of("1300").value();
 export const TWO_THOUSAND = ScaledAmount.of("2000").value();
 export const TEN_THOUSAND = ScaledAmount.of("10000").value();
 export const ONE_HUNDRED_THOUSAND = ScaledAmount.of("100000").value();

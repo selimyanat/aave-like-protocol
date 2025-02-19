@@ -82,7 +82,7 @@ contract Pool is ReentrancyGuard {
     event Repayment(address indexed borrower, uint netPayment, uint collateralToReturn, uint totalLiquidity, uint totalBorrows, uint utilizationRate);
 
     /// @dev Emitted when a borrower is liquidated.
-    event Liquidation(address indexed borrower, address indexed liquidator, uint principalWithInterest, uint liquidatorReward, uint remainingCollateral, uint totalLiquidity, uint totalBorrows, uint utilizationRate);
+    event Liquidation(address indexed borrower, address indexed liquidator, uint principalWithInterest, uint collateralSeized, uint liquidatorReward, uint remainingCollateral, uint totalLiquidity, uint totalBorrows, uint utilizationRate);
 
     /**
      * @notice Deploys the Pool contract.
@@ -283,18 +283,23 @@ contract Pool is ReentrancyGuard {
         debtToken.recalculateDebtIndex(); 
         uint repaymentAmountWithInterest = debtToken.getTotalDebtOwed(borrower);
         totalLiquidity += repaymentAmountWithInterest;
-        uint collateralToSeize = collateralBalances[borrower]; 
+        
+        // calculate the liquidator reward and the remaining collateral        
+        uint collateralToSeize = (repaymentAmountWithInterest * (DECIMALS + liquidationPenaltyRate)) / collateralPrice;
+        if (collateralToSeize > collateralBalances[borrower]) {            
+            collateralToSeize = collateralBalances[borrower];
+            console.log("capped newCollateralToSeize", collateralToSeize);
+        }       
+        uint liquidatorProfit = (collateralToSeize * liquidationPenaltyRate) / DECIMALS;
+        uint remainingCollateral = collateralBalances[borrower] - collateralToSeize;
         collateralBalances[borrower] = 0; 
-        uint liquidatorReward = (collateralToSeize * liquidationPenaltyRate) / DECIMALS;
-        uint remainingCollateral = collateralToSeize - liquidatorReward;
-        require(liquidatorReward <= collateralToSeize, "Insufficient collateral to apply liquidator reward");
 
         // Make the transfer(s)        
         uint allowance = borrowedToken.allowance(msg.sender, address(this));
         // TODO allow the liquidator to approve more than needed (allowance) as the repayment amount might change betweeh the approval and the liquidation
         require(repaymentAmountWithInterest == allowance, "The amount of token to repay the debt must be equal to borrowed amount including the interests");
-        SafeERC20.safeTransferFrom(borrowedToken, msg.sender, address(this), repaymentAmountWithInterest);                
-        SafeERC20.safeTransfer(collateralToken, msg.sender, liquidatorReward);        
+        SafeERC20.safeTransferFrom(borrowedToken, msg.sender, address(this), repaymentAmountWithInterest);
+        SafeERC20.safeTransfer(collateralToken, msg.sender, collateralToSeize); 
         if (remainingCollateral > 0) {
             SafeERC20.safeTransfer(collateralToken, borrower, remainingCollateral);
         }
@@ -306,7 +311,7 @@ contract Pool is ReentrancyGuard {
         lendingRate.recalculateLendingRate(newBorrowingRate);
         debtToken.recalculateDebtIndex();
         ibToken.recalculateExchangeRate();
-        emit Liquidation(borrower, msg.sender, repaymentAmountWithInterest, liquidatorReward, remainingCollateral, totalLiquidity, totalBorrows, utilizationRate);
+        emit Liquidation(borrower, msg.sender, repaymentAmountWithInterest, collateralToSeize, liquidatorProfit, remainingCollateral, totalLiquidity, totalBorrows, utilizationRate);
     }
     
     /**

@@ -31,7 +31,7 @@ const COLLATERAL_PRICE =  ethers.parseUnits("2000", 18);
 // 80% liquidation threshold
 const LIQUIDATION_THRESHOLD = ethers.parseUnits("0.8", 18);
 // 10% liquidation fee
-const LIQUIDATION_PENALTY_RATE = ethers.parseUnits("0.1", 18);
+const LIQUIDATION_PENALTY_RATE = ethers.parseUnits("0.10", 18);
 
 
 export default class ContractRegistry {

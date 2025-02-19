@@ -3,7 +3,7 @@ import { expect } from "chai";
 import ContractRegistry from "../contracts/ContractRegistry";
 import TestActorsRegistry from "../actors/TestActorsRegistry";
 import {ZERO_ADDRESS, ONE_DAY} from "../utils/Constants";
-import ScaledAmount, {TWO_HUNDRED_THOUSAND, FOUR_HUNDRED_THOUSAND, ZERO, ONE_THOUSAND, ONE, FIVE_HUNDRED, TEN_THOUSAND} from "../utils/ScaledAmount";
+import ScaledAmount, {TWO_HUNDRED_THOUSAND, FOUR_HUNDRED_THOUSAND, ZERO, ONE_THOUSAND, TWO, FIVE_HUNDRED, SIX_HUNDRED, TEN_THOUSAND} from "../utils/ScaledAmount";
 import BlockchainUtils from "../utils/BlockchainUtils";
 import TimeForwarder from "../utils/TimeForwarder";
 
@@ -25,9 +25,10 @@ describe("Liquidation flow", function() {
         await actors.borrowedTokenFaucet.transferTokens(actors.aliceTheLender.getAddress(), TWO_HUNDRED_THOUSAND);
         await actors.borrowedTokenFaucet.transferTokens(actors.gregTheLiquidator.getAddress(), FOUR_HUNDRED_THOUSAND);
         
-        await TimeForwarder.getInstance().forwardTime(ONE_DAY);
+        // To simplify the calculation
+        //await TimeForwarder.getInstance().forwardTime(ONE_DAY);
         await actors.aliceTheLender.deposit(TWO_HUNDRED_THOUSAND)
-        await actors.bobTheBorrower.borrow(ONE_THOUSAND, ONE);
+        await actors.bobTheBorrower.borrow(ONE_THOUSAND, TWO);
                     
         blokchainStateId = await BlockchainUtils.saveState()
     })
@@ -48,7 +49,7 @@ describe("Liquidation flow", function() {
                 .revertedWith("The borrower has no debt to liquidate")
         })
 
-        it ("Should reject the liquidation if Bob's helath factor is safe", async function () {
+        it ("Should reject the liquidation if Bob's health factor is safe", async function () {
             
             await expect(actors.gregTheLiquidator.liquidate(actors.bobTheBorrower.getAddress(), ONE_THOUSAND))
             .to.be
@@ -68,7 +69,7 @@ describe("Liquidation flow", function() {
         it ("Should accept the liquidation if the amount of token covers the borrowed amount with interests", async function () {
             
             // decrease the collateral value to make the health factor unsafe
-            await registry.oracleGateway.updateCollateralPrice(FIVE_HUNDRED)
+            await registry.oracleGateway.updateCollateralPrice(SIX_HUNDRED)
 
             const expectedBobDebtToRepayWithInterest = ScaledAmount.of("1000.660273972602738000").value();
             const bobDebtTokenBalanceBeforeRepay = ScaledAmount.of("1000.219178082191780000").value();
@@ -80,8 +81,9 @@ describe("Liquidation flow", function() {
                                 actors.bobTheBorrower.getAddress(),  // borrower
                                 actors.gregTheLiquidator.getAddress(),  // liquidator
                                 expectedBobDebtToRepayWithInterest, // amount of token borrowed with interests
-                                ScaledAmount.of("0.1").value(), // collateral to liquidator
-                                ScaledAmount.of("0.9").value(), // collateral to borrower
+                                ScaledAmount.of("1.834543835616438353").value(), // collateral rewarded for the liquidator
+                                ScaledAmount.of("0.183454383561643835").value(), // liquidator profits
+                                ScaledAmount.of("0.165456164383561647").value(), // remaining collateral for borrower
                                 ScaledAmount.of("200000.660273972602738000").value(), // total liquidity
                                 ZERO, // total borrowed
                                 ZERO) // utilization rate
@@ -90,9 +92,9 @@ describe("Liquidation flow", function() {
                     .to.emit(registry.borrowedToken, "Transfer")
                             .withArgs(actors.gregTheLiquidator.getAddress(), registry.poolAddress, expectedBobDebtToRepayWithInterest)
                     .to.emit(registry.collateralToken, "Transfer")
-                            .withArgs(registry.poolAddress, actors.bobTheBorrower.getAddress(), ScaledAmount.of("0.9").value())
+                            .withArgs(registry.poolAddress, actors.bobTheBorrower.getAddress(), ScaledAmount.of("0.165456164383561647").value())
                     .to.emit(registry.collateralToken, "Transfer")
-                            .withArgs(registry.poolAddress, actors.gregTheLiquidator.getAddress(), ScaledAmount.of("0.1").value())                            
+                            .withArgs(registry.poolAddress, actors.gregTheLiquidator.getAddress(), ScaledAmount.of("1.834543835616438353").value())                            
                     .to.emit(registry.borrowingRate, "BorrowingRateUpdated")                    
                             .withArgs(ScaledAmount.of("0.080000000000000000").value())
                     .to.emit(registry.lendingRate, "LendingRateUpdated")                    
