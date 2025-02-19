@@ -23,14 +23,13 @@ automatically puts the borrower under liquidation.
 
 ## How Does It Work ?
 
-A borrower position is marked as liquidable when the ratio of the deposited collateral 
+* A borrower position is marked as liquidable when the ratio of the deposited collateral 
 against the borrowed assets, aka health factor, becomes under the safety threshold. 
-Therefore, liquidators which can be individuals or bots who monitor the protocol for 
-under-collateralized positions. When a position is found under-collateralize they trigger 
-the liquidation function in the protocol’s smart contract by repaying a part or all 
-the borrower's debt.
-
-In return the liquidator receives a portion of the borrower’s collateral as an incentive.
+* Liquidators which can be individuals or bots who monitor the protocol for 
+under-collateralized positions.
+* When a position is found under-collateralize they trigger the liquidation function in
+the protocol’s smart contract by repaying a part or all the borrower's debt.
+* In return the liquidator receives a portion of the borrower’s collateral as an incentive.
 The remaining collateral is returned to the borrower. 
 
 > [!NOTE]  
@@ -48,19 +47,19 @@ Remaining collateral = Total collateral - Collateral seized
 
 ### Why This Works ?
 
-* The debt repaid is the amount the liquidator is repaying (including interests).
-* The liquidation bonus gives the liqudidator more collateral than the amount to repaid.
-* The collateral price determines how much collateral is equivalent to the debt being repaid.
+* The debt repaid is the amount the liquidator covers, **including interest**.
+* The liquidation profit gives the liquidator more collateral than the amount repaid to 
+* ensure profitability.
+* The collateral price determines how much collateral is needed to cover the deb.
 
 This ensures that liquidators make a profit, which encourages them to participate in liquidations. 
 
 > [!WARNING]
-> Liquidation must happens sooner so that there will still be enough collateral to fairly 
-> compensante the liquidator. Otherwise the protocol would cap the colalteral (Collateral to seize 
-> <= Total collateral) to prevent taking more than what the borrower owns.
-> More importantly, some protocols run their own liquidation bots as a backup
-> when external liquidators don't act. This ensures that bad debt does not remain
-> unliquidated for too long.
+> Liquidation must happen early so that there is still enough collateral to compensate the liquidator
+> fairly. If liquidation is delayed too long, the protocol caps the collateral seized to prevent 
+> liquidators from taking more than what the borrower owns (Collateral to seize 
+> <= Total collateral).  Some DeFi protocols also run their own liquidation bots as a backup when 
+> external liquidators don’t act.
 
 <pre>
 Liquidator's profit = Collateral seized x liquidation bonus
