@@ -72,7 +72,7 @@ Liquidator's profit = Collateral seized x liquidation bonus
 * **Liquidation bonus**: 10%
 * **Liquidation threshold**: 80%
 * **Alice borrows 1000 USDC**.
-* **Alice deposits 2 ETH** (worth 10000$) as collateral.
+* **Alice deposits 2 ETH** (worth 4000$) as collateral.
 * **Alice's health factor is safe**: <pre> (4000 / 1000) x (0.8) = 3.2 > 1 </pre> 
 
 ### 📈 Market Fluctuation
