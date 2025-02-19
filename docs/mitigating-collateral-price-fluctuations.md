@@ -52,7 +52,15 @@ Remaining collateral = Total collateral - Collateral seized
 * The liquidation bonus gives the liqudidator more collateral than the amount to repaid.
 * The collateral price determines how much collateral is equivalent to the debt being repaid.
 
-This ensures that liquidators make a profit, which encourages them to participate in liquidations.
+This ensures that liquidators make a profit, which encourages them to participate in liquidations. 
+
+> [!WARNING]
+> Liquidation must happens sooner so that there will still be enough collateral to fairly 
+> compensante the liquidator. Otherwise the protocol would cap the colalteral (Collateral to seize 
+> <= Total collateral) to prevent taking more than what the borrower owns.
+> More importantly, some protocols run their own liquidation bots as a backup
+> when external liquidators don't act. This ensures that bad debt does not remain
+> unliquidated for too long.
 
 <pre>
 Liquidator's profit = Collateral seized x liquidation bonus
@@ -61,23 +69,24 @@ Liquidator's profit = Collateral seized x liquidation bonus
 ## Example: Liquidation in Action
 
 ### ⚙️ Initial Setup
-* The protocol requires **a minimum health factor of 1.2**
-* **Liquidation bonus**: 20%
-* **Alice borrows 6000 USDC**.
-* **Alice deposits 5 ETH** (worth 10000$) as collateral.
-* **Alice's health factor is safe**: <pre>10000 / 6000 = 1.66 > 1.2 </pre> 
+* The protocol requires **a minimum health factor of 1**
+* **Liquidation bonus**: 10%
+* **Liquidation threshold**: 80%
+* **Alice borrows 1000 USDC**.
+* **Alice deposits 2 ETH** (worth 10000$) as collateral.
+* **Alice's health factor is safe**: <pre> (4000 / 1000) x (0.8) = 3.2 > 1 </pre> 
 
 ### 📈 Market Fluctuation
-* **ETH’s price drops** from 2000$ to 1300$.
-* **Alice’s collateral value falls** to 6500$, but she still owes 6000 USDC.
-* **New health factor** is: <pre> 6500 / 6000 = 1.08 < 1.2 </pre>
+* **ETH’s price drops** from 2000$ to 600$.
+* **Alice’s collateral value falls** to 1200$, but she still owes 1000 USDC.
+* **New health factor** is: <pre> (1200 / 1000) x 0.8 = 0.96 < 1 </pre>
 * **Alice’s loan is now under-collateralized** and eligible for liquidation.
 
 ### 🏛️ Liquidation Process
-* **A liquidator repays the full loan 6000 USDC** of Alice’s loan.
-* In return, the liquidator receives: <pre>6000/1300 x (1 + 0.2) = 5.54 ETH</pre>
-* The liquidator's profit is: <pre> 5.54 x 0.2 = 1.11 ETH</pre>
-* Alice was **fully liquidated** and here **remaining collateral** is: 0 ETH. 
+* **A liquidator repays the full loan 1000 USDC** of Alice’s loan.
+* In return, the liquidator receives: <pre>1000/600 x (1 + 0.1) = 1.83 ETH = 1098$</pre>
+* The liquidator's profit is: <pre> 1.83 x 0.1 = 0.183 ETH = +109$ </pre>
+* Alice was **fully liquidated** and here **remaining collateral** is: 2 - 1.83 = 0.17 ETH. 
 
 > [!NOTE]  
 > In most DeFi protocols, liquidators can repay the full loan or a portion **including the
