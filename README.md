@@ -20,7 +20,7 @@ on key concepts and provide you with a solid fundamentals. So without further ad
 
 🪙 [Tracking interest through interest bearing tokens](docs/tracking-lender-interest-using-token.md)
 
-📈 [Mitigating Collateral Price Fluctuations: Understanding Liquidation](docs/liquidation.md)
+📈 [Mitigating Collateral Price Fluctuations: Understanding Liquidation](docs/mitigating-collateral-price-fluctuations.md)
 
 📜 [Smart Contracts for a Aave-like protocol](./smart-contracts/README.md) 
 
