@@ -77,7 +77,7 @@ Liquidator's profit = Collateral seized x liquidation bonus
 
 ### 📈 Market Fluctuation
 * **ETH’s price drops** from 2000$ to 600$.
-* **Alice’s collateral value falls** to 1200$, but she still owes 1000 USDC.
+* **Alice’s collateral value falls** to 1200$ (2 x 600), but she still owes 1000 USDC.
 * **New health factor** is: <pre> (1200 / 1000) x 0.8 = 0.96 < 1 </pre>
 * **Alice’s loan is now under-collateralized** and eligible for liquidation.
 
